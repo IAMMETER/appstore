@@ -1,0 +1,20 @@
+{
+  "id": "iammeter-local-api-explorer",
+  "name": "IAMMETER Local API Explorer",
+  "author": "miwyf",
+  "description": "Interactive Swagger UI interface for testing and exploring all IAMMETER Wi-Fi Energy Meter local HTTP APIs. Supports dynamic server configuration with browser storage.",
+  "version": "1.0.0",
+  "category": "tooling",
+  "type": "open-source",
+  "runtime": "static",
+  "tags": ["static", "api", "swagger", "testing", "iammeter", "documentation"],
+  "entry": "frontend/index.html",
+  "configSchema": [],
+  "links": {
+    "homepage": "https://github.com/IAMMETER/appstore/tree/main/apps/iammeter-local-api-explorer",
+    "docs": "https://github.com/IAMMETER/appstore/blob/main/apps/iammeter-local-api-explorer/README.md",
+    "source": "https://github.com/IAMMETER/appstore",
+    "preview": "https://iammeter.github.io/appstore/apps/iammeter-local-api-explorer/frontend/index.html",
+    "screenshot": "https://iammeter.github.io/appstore/apps/iammeter-local-api-explorer/screenshot.jpg"
+  }
+}

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>IAMMETER API Explorer</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .topbar-custom {
+      padding: 12px 20px;
+      background: #f7f7f7;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      font-family: Arial, sans-serif;
+    }
+
+    .topbar-custom label {
+      font-size: 14px;
+      color: #333;
+    }
+
+    .topbar-custom input {
+      width: 360px;
+      max-width: 100%;
+      padding: 6px 10px;
+      font-size: 14px;
+    }
+
+    .topbar-custom button {
+      padding: 7px 14px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .topbar-custom .hint {
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar-custom">
+    <label for="serverInput">Meter IP:</label>
+    <input id="serverInput" type="text" placeholder="Enter meter IP, e.g., 10.10.30.35 or http://10.10.30.35" />
+    <button id="applyBtn">Apply</button>
+    <button id="resetBtn">Reset</button>
+    <span class="hint">Changes will be saved to browser and persist after refresh</span>
+  </div>
+
+  <div id="swagger-ui"></div>
+
+  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-standalone-preset.js"></script>
+  <script>
+    const STORAGE_KEY = "swagger_custom_server";
+    const DEFAULT_SWAGGER_URL = "./swagger.json";
+
+    let ui = null;
+    let originalSpec = null;
+
+    async function loadSpec() {
+      const res = await fetch(DEFAULT_SWAGGER_URL);
+      if (!res.ok) {
+        throw new Error("Failed to load swagger.json");
+      }
+      return await res.json();
+    }
+
+    function getSavedServer() {
+      return localStorage.getItem(STORAGE_KEY) || "";
+    }
+
+    function saveServer(url) {
+      localStorage.setItem(STORAGE_KEY, url);
+    }
+
+    function clearServer() {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
+    function buildSpec(spec, customServer) {
+      const newSpec = JSON.parse(JSON.stringify(spec));
+
+      if (customServer && customServer.trim()) {
+        newSpec.servers = [
+          {
+            url: customServer.trim(),
+            description: "Custom Server"
+          }
+        ];
+      }
+
+      return newSpec;
+    }
+
+    function renderSwagger(spec) {
+      document.getElementById("swagger-ui").innerHTML = "";
+
+      ui = SwaggerUIBundle({
+        spec: spec,
+        dom_id: "#swagger-ui",
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        layout: "BaseLayout"
+      });
+    }
+
+    async function initSwagger() {
+      try {
+        originalSpec = await loadSpec();
+
+        const savedServer = getSavedServer();
+        document.getElementById("serverInput").value = savedServer;
+
+        const specToRender = buildSpec(originalSpec, savedServer);
+        renderSwagger(specToRender);
+      } catch (err) {
+        console.error(err);
+        document.getElementById("swagger-ui").innerHTML =
+          "<div style='padding:20px;color:red;'>Failed to load Swagger: " + err.message + "</div>";
+      }
+    }
+
+    document.getElementById("applyBtn").addEventListener("click", () => {
+      let server = document.getElementById("serverInput").value.trim();
+
+      if (!server) {
+        alert("Please enter meter IP address");
+        return;
+      }
+
+      // Auto-add http:// if no protocol specified
+      if (!server.startsWith("http://") && !server.startsWith("https://")) {
+        server = "http://" + server;
+      }
+
+      saveServer(server);
+      const specToRender = buildSpec(originalSpec, server);
+      renderSwagger(specToRender);
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      clearServer();
+      document.getElementById("serverInput").value = "";
+      renderSwagger(originalSpec);
+    });
+
+    initSwagger();
+  </script>
+</body>
+</html>

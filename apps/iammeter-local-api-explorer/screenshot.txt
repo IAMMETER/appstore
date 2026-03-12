@@ -1,0 +1,13 @@
+Screenshot placeholder - Please replace this with an actual screenshot.jpg file.
+
+Recommended screenshot specifications:
+- Format: JPEG
+- Dimensions: 1200x800 pixels (or similar 3:2 aspect ratio)
+- Content: Show the Swagger UI interface with some API endpoints visible
+- Quality: High quality, clear and readable
+- File size: Less than 500KB
+
+The screenshot should demonstrate:
+- The top configuration bar (Meter IP input)
+- Several API endpoints expanded or collapsed
+- The overall look and feel of the application
