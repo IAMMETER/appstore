@@ -1,0 +1,20 @@
+{
+  "id": "mqtt-power-factor-analyzer",
+  "name": "Example-mqtt-power-factor-analyzer",
+  "author": "Laoliu",
+  "description": "Subscribe the mqtt data via websocket,monitor the power factor and reactive power value in real time", 
+  "version": "0.5.0",
+  "category": "monitoring",
+  "type": "open-source",
+  "runtime": "static",
+  "tags": ["example", "template", "static","official","mqtt","power factor","reactive power"],
+  "entry": "frontend/index.html",
+  "configSchema": [],
+  "links": {
+    "homepage": "https://github.com/IAMMETER/appstore/tree/main/apps/mqtt-power-factor-analyzer",
+    "source": "https://github.com/IAMMETER/appstore",
+    "docs": "https://github.com/IAMMETER/appstore/blob/main/apps/mqtt-power-factor-analyzer/README.md",
+    "preview": "https://iammeter.github.io/appstore/apps/mqtt-power-factor-analyzer/frontend/index.html",
+    "screenshot": "https://iammeter.github.io/appstore/apps/mqtt-power-factor-analyzer/screenshot.jpg"
+  }
+}
