@@ -7,7 +7,7 @@
   "category": "tooling",
   "type": "open-source",
   "runtime": "static",
-  "tags": ["static", "api", "swagger", "testing", "iammeter", "documentation"],
+  "tags": ["Local API", "swagger",  "documentation"],
   "entry": "frontend/index.html",
   "configSchema": [],
   "links": {

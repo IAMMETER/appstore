@@ -1,9 +1,11 @@
 (function () {
   const MQTT_WS_URL = "wss://mqtt.iammeter.com:8084/mqtt";
-  const DEVICE_SN = "CB0A0CFB";
-  const MQTT_USERNAME = "lewei";
-  const MQTT_PASSWORD = "123456";
-  const MQTT_TOPIC = `device/${DEVICE_SN}/realtime`;
+  const STORAGE_KEY = "iammeter-mqtt-power-factor-config";
+  const DEFAULT_CONFIG = {
+    sn: "CB0A0CFB",
+    username: "lewei",
+    password: "123456",
+  };
   const PHASE_NAMES = ["A", "B", "C"];
   const ACTIVE_FIELDS = [
     { key: "voltage", label: "Voltage", unit: "V", index: 0, digits: 1 },
@@ -26,6 +28,36 @@
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
+  }
+
+  function getTopic(config) {
+    return `device/${config.sn}/realtime`;
+  }
+
+  function normalizeConfig(config) {
+    return {
+      sn: String(config.sn || DEFAULT_CONFIG.sn).trim() || DEFAULT_CONFIG.sn,
+      username: String(config.username || DEFAULT_CONFIG.username).trim() || DEFAULT_CONFIG.username,
+      password: String(config.password || DEFAULT_CONFIG.password),
+    };
+  }
+
+  function loadConfig() {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        return normalizeConfig(DEFAULT_CONFIG);
+      }
+      return normalizeConfig(JSON.parse(raw));
+    } catch (_error) {
+      return normalizeConfig(DEFAULT_CONFIG);
+    }
+  }
+
+  function saveConfig(config) {
+    const normalized = normalizeConfig(config);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    return normalized;
   }
 
   function formatValue(value, digits) {
@@ -53,8 +85,7 @@
     const magnitude = clamp(Math.abs(powerFactor), 0, 1);
     const angle = (Math.acos(magnitude) * 180) / Math.PI;
     const sign = reactivePower < 0 ? -1 : 1;
-    const signedAngle = angle * sign;
-    return `${signedAngle.toFixed(1)}°`;
+    return `${(angle * sign).toFixed(1)}°`;
   }
 
   function formatPowerFactor(powerFactor) {
@@ -155,6 +186,7 @@
       .iammeter-tabs {
         display: inline-flex;
         gap: 8px;
+        flex-wrap: wrap;
       }
       .iammeter-tab {
         appearance: none;
@@ -189,13 +221,15 @@
       .iammeter-grid.details {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
-      .iammeter-card {
+      .iammeter-card,
+      .iammeter-settings-card {
         background: linear-gradient(180deg, #161d24 0%, #12181e 100%);
         border: 1px solid #2a333d;
         border-radius: 12px;
         overflow: hidden;
       }
-      .iammeter-card-head {
+      .iammeter-card-head,
+      .iammeter-settings-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -203,13 +237,15 @@
         padding: 10px 12px 8px;
         border-bottom: 1px solid #232d36;
       }
-      .iammeter-card-title {
+      .iammeter-card-title,
+      .iammeter-settings-title {
         margin: 0;
         font-size: 14px;
         font-weight: 700;
         letter-spacing: 0.06em;
       }
-      .iammeter-card-meta {
+      .iammeter-card-meta,
+      .iammeter-settings-meta {
         color: #6e7c89;
         font-size: 11px;
         text-transform: uppercase;
@@ -287,12 +323,6 @@
       .iammeter-primary-icon[data-mode="unknown"] {
         opacity: 0.45;
       }
-      .iammeter-footnote {
-        margin-top: 10px;
-        color: #697684;
-        font-size: 11px;
-        letter-spacing: 0.04em;
-      }
       .iammeter-detail-list {
         padding: 6px 12px 12px;
       }
@@ -316,9 +346,96 @@
         text-align: right;
         font-variant-numeric: tabular-nums;
       }
+      .iammeter-settings-body {
+        padding: 12px;
+      }
+      .iammeter-settings-copy {
+        margin: 0 0 12px;
+        color: #95a2af;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .iammeter-settings-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .iammeter-field {
+        display: grid;
+        gap: 6px;
+      }
+      .iammeter-field label {
+        color: #8b97a3;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .iammeter-field input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        border: 1px solid #2d3944;
+        border-radius: 9px;
+        background: #0e1419;
+        color: #dfe6ec;
+        font: inherit;
+      }
+      .iammeter-field input::placeholder {
+        color: #6d7b89;
+      }
+      .iammeter-hint {
+        color: #708090;
+        font-size: 11px;
+      }
+      .iammeter-settings-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .iammeter-settings-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+      .iammeter-settings-links a {
+        color: #8fc7ff;
+        font-size: 12px;
+        text-decoration: none;
+      }
+      .iammeter-settings-links a:hover {
+        text-decoration: underline;
+      }
+      .iammeter-save {
+        appearance: none;
+        border: 1px solid #31506b;
+        border-radius: 10px;
+        padding: 10px 16px;
+        background: linear-gradient(180deg, #1a3b56 0%, #123047 100%);
+        color: #f4f8fb;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+      .iammeter-save-status {
+        color: #8da0b0;
+        font-size: 12px;
+      }
+      .iammeter-footnote {
+        margin-top: 10px;
+        color: #697684;
+        font-size: 11px;
+        letter-spacing: 0.04em;
+      }
       @media (max-width: 900px) {
         .iammeter-grid.primary,
-        .iammeter-grid.details {
+        .iammeter-grid.details,
+        .iammeter-settings-grid {
           grid-template-columns: 1fr;
         }
       }
@@ -345,14 +462,15 @@
         }
         .iammeter-tabs {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           width: 100%;
         }
         .iammeter-tab {
           width: 100%;
           padding: 11px 10px;
         }
-        .iammeter-card-head {
+        .iammeter-card-head,
+        .iammeter-settings-head {
           padding: 12px 12px 10px;
         }
         .iammeter-primary {
@@ -360,6 +478,17 @@
         }
         .iammeter-detail-list {
           padding: 6px 12px 12px;
+        }
+        .iammeter-settings-actions {
+          align-items: stretch;
+          flex-direction: column;
+        }
+        .iammeter-settings-links {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .iammeter-save {
+          width: 100%;
         }
       }
     `;
@@ -492,6 +621,47 @@
     return card;
   }
 
+  function createSettingsPanel(config) {
+    const wrapper = document.createElement("section");
+    wrapper.className = "iammeter-settings-card";
+    wrapper.innerHTML = `
+      <div class="iammeter-settings-head">
+        <h3 class="iammeter-settings-title">Connection Settings</h3>
+        <span class="iammeter-settings-meta">Save To Reconnect</span>
+      </div>
+      <div class="iammeter-settings-body">
+        <p class="iammeter-settings-copy">
+          Defaults are preloaded below. You can save immediately to keep them, or replace them with your own IAMMETER MQTT credentials and device SN.
+        </p>
+        <div class="iammeter-settings-grid">
+          <div class="iammeter-field">
+            <label for="iammeter-sn">Device SN</label>
+            <input id="iammeter-sn" data-setting="sn" value="${config.sn}" placeholder="${DEFAULT_CONFIG.sn}" />
+            <div class="iammeter-hint">Default: ${DEFAULT_CONFIG.sn}</div>
+          </div>
+          <div class="iammeter-field">
+            <label for="iammeter-username">MQTT Username</label>
+            <input id="iammeter-username" data-setting="username" value="${config.username}" placeholder="${DEFAULT_CONFIG.username}" />
+            <div class="iammeter-hint">Default: ${DEFAULT_CONFIG.username}</div>
+          </div>
+          <div class="iammeter-field">
+            <label for="iammeter-password">MQTT Password</label>
+            <input id="iammeter-password" data-setting="password" value="${config.password}" placeholder="${DEFAULT_CONFIG.password}" />
+            <div class="iammeter-hint">Default: ${DEFAULT_CONFIG.password}</div>
+          </div>
+        </div>
+        <div class="iammeter-settings-actions">
+          <div class="iammeter-settings-links">
+            <button type="button" class="iammeter-save" data-role="save-settings">Save</button>
+            <a href="https://www.iammeter.com/blog/subscribe-real-time-energy-data-mqtt#iammeter-mqtt-broker-configuration" target="_blank" rel="noreferrer">How to get MQTT broker settings from IAMMETER-Cloud</a>
+          </div>
+          <div class="iammeter-save-status" data-role="save-status">Current values are ready to use.</div>
+        </div>
+      </div>
+    `;
+    return wrapper;
+  }
+
   function setPanel(container, target) {
     const tabs = container.querySelectorAll("[data-tab-target]");
     const panels = container.querySelectorAll("[data-panel]");
@@ -504,7 +674,7 @@
     });
   }
 
-  function renderSkeleton(container) {
+  function renderSkeleton(container, config) {
     createStyles();
 
     container.innerHTML = "";
@@ -527,6 +697,7 @@
         <div class="iammeter-tabs">
           <button class="iammeter-tab is-active" type="button" data-tab-target="primary">Overview</button>
           <button class="iammeter-tab" type="button" data-tab-target="details">Details</button>
+          <button class="iammeter-tab" type="button" data-tab-target="settings">Settings</button>
         </div>
       </div>
       <div class="iammeter-panel is-active" data-panel="primary">
@@ -535,16 +706,19 @@
       <div class="iammeter-panel" data-panel="details">
         <div class="iammeter-grid details" data-role="details-grid"></div>
       </div>
+      <div class="iammeter-panel" data-panel="settings" data-role="settings-panel"></div>
       <div class="iammeter-footnote" data-role="update-time">Last update --</div>
     `;
 
     const primaryGrid = container.querySelector('[data-role="primary-grid"]');
     const detailsGrid = container.querySelector('[data-role="details-grid"]');
+    const settingsPanel = container.querySelector('[data-role="settings-panel"]');
 
     PHASE_NAMES.forEach((phaseName) => {
       primaryGrid.appendChild(createOverviewCard(phaseName, `Phase ${phaseName}`));
       detailsGrid.appendChild(createDetailsCard(phaseName, `Phase ${phaseName}`));
     });
+    settingsPanel.appendChild(createSettingsPanel(config));
 
     container.querySelectorAll("[data-tab-target]").forEach((button) => {
       button.addEventListener("click", function () {
@@ -561,6 +735,13 @@
       status.classList.add(statusClass);
     }
     statusText.textContent = text;
+  }
+
+  function setSaveStatus(container, text) {
+    const status = container.querySelector('[data-role="save-status"]');
+    if (status) {
+      status.textContent = text;
+    }
   }
 
   function updatePrimaryValue(container, phaseKey, key, value) {
@@ -609,9 +790,7 @@
         field.key === "powerFactor"
           ? formatPowerFactor(values[field.index])
           : formatWithUnit(values[field.index], field.digits, field.unit);
-      if (field.key === "activePower") {
-        updatePrimaryValue(container, phaseKey, field.key, text);
-      } else if (field.key === "powerFactor") {
+      if (field.key === "activePower" || field.key === "powerFactor") {
         updatePrimaryValue(container, phaseKey, field.key, text);
       } else {
         updateDetailValue(container, phaseKey, "active", field.key, text);
@@ -650,16 +829,10 @@
     const reactivePower = Array.isArray(reactiveValues) ? reactiveValues[0] : undefined;
     const angleText = formatPhaseAngle(powerFactor, reactivePower);
     updatePrimaryValue(container, phaseKey, "phaseAngle", angleText);
-    updateDetailValue(
-      container,
-      phaseKey,
-      "derived",
-      "phaseAngle",
-      angleText
-    );
+    updateDetailValue(container, phaseKey, "derived", "phaseAngle", angleText);
   }
 
-  function updateFootnote(container, payload) {
+  function updateFootnote(container) {
     const footnote = container.querySelector('[data-role="update-time"]');
     const timestamp = new Date().toLocaleString();
     footnote.textContent = `Last update ${timestamp}`;
@@ -684,46 +857,73 @@
       updatePhaseAngle(container, phaseKey, phaseValues, reactiveValues);
     });
 
-    updateFootnote(container, payload);
+    updateFootnote(container);
   }
 
-  function connectRealtime(container) {
+  function clearReadings(container) {
+    container.querySelectorAll("[data-primary-field]").forEach((node) => {
+      node.textContent = "--";
+    });
+    container.querySelectorAll("[data-detail-field]").forEach((node) => {
+      node.textContent = "--";
+    });
+    container.querySelectorAll("[data-icon-field='reactivePower']").forEach((node) => {
+      node.dataset.mode = "unknown";
+      node.textContent = "--";
+      node.title = "unknown";
+    });
+  }
+
+  function connectRealtime(container, state) {
     if (!window.mqtt || typeof window.mqtt.connect !== "function") {
       updateStatus(container, "mqtt.js not loaded", "error");
       throw new Error("mqtt.js was not found on window.mqtt");
     }
 
+    if (state.client) {
+      try {
+        state.client.end(true);
+      } catch (_error) {
+      }
+    }
+
+    clearReadings(container);
+    const topic = getTopic(state.config);
     const client = window.mqtt.connect(MQTT_WS_URL, {
       clean: true,
       connectTimeout: 10000,
       reconnectPeriod: 3000,
-      username: MQTT_USERNAME,
-      password: MQTT_PASSWORD,
+      username: state.config.username,
+      password: state.config.password,
       clientId: randomClientId(),
     });
+    state.client = client;
+
+    updateStatus(container, "Connecting", "");
+    const footnote = container.querySelector('[data-role="update-time"]');
+    footnote.textContent = `Last update waiting for ${state.config.sn}`;
 
     client.on("connect", function () {
       updateStatus(container, "Connected", "connected");
-      client.subscribe(MQTT_TOPIC, function (error) {
+      client.subscribe(topic, function (error) {
         if (error) {
           updateStatus(container, "Subscribe failed", "error");
           return;
         }
-        const footnote = container.querySelector('[data-role="update-time"]');
-        footnote.textContent = "Last update waiting";
+        footnote.textContent = `Last update waiting for ${state.config.sn}`;
       });
     });
 
     client.on("reconnect", function () {
-      updateStatus(container, "Reconnecting");
+      updateStatus(container, "Reconnecting", "");
     });
 
     client.on("error", function (error) {
       updateStatus(container, `Error: ${error.message}`, "error");
     });
 
-    client.on("message", function (topic, message) {
-      if (topic !== MQTT_TOPIC) {
+    client.on("message", function (incomingTopic, message) {
+      if (incomingTopic !== topic) {
         return;
       }
 
@@ -734,8 +934,28 @@
         updateStatus(container, `Parse error: ${error.message}`, "error");
       }
     });
+  }
 
-    return client;
+  function readSettingsForm(container) {
+    return normalizeConfig({
+      sn: container.querySelector("[data-setting='sn']").value,
+      username: container.querySelector("[data-setting='username']").value,
+      password: container.querySelector("[data-setting='password']").value,
+    });
+  }
+
+  function bindSettings(container, state) {
+    const saveButton = container.querySelector("[data-role='save-settings']");
+    if (!saveButton) {
+      return;
+    }
+
+    saveButton.addEventListener("click", function () {
+      state.config = saveConfig(readSettingsForm(container));
+      setSaveStatus(container, `Saved. Reconnecting to ${state.config.sn}.`);
+      connectRealtime(container, state);
+      setPanel(container, "primary");
+    });
   }
 
   function mount(target) {
@@ -746,12 +966,19 @@
       throw new Error("IAMMETER mount target was not found");
     }
 
-    renderSkeleton(container);
-    const client = connectRealtime(container);
+    const state = {
+      client: null,
+      config: loadConfig(),
+    };
+
+    renderSkeleton(container, state.config);
+    bindSettings(container, state);
+    connectRealtime(container, state);
+
     return {
       destroy: function () {
-        if (client) {
-          client.end(true);
+        if (state.client) {
+          state.client.end(true);
         }
       },
     };

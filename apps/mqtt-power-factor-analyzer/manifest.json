@@ -7,7 +7,7 @@
   "category": "monitoring",
   "type": "open-source",
   "runtime": "static",
-  "tags": ["example", "template", "static","official","mqtt","power factor","reactive power"],
+  "tags": ["mqtt","power factor","reactive power"],
   "entry": "frontend/index.html",
   "configSchema": [],
   "links": {

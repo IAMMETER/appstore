@@ -5,9 +5,9 @@
   "description": "A fully static web application (no backend required) that provides a customizable monitoring dashboard for IAMMETER energy meters.",
   "version": "0.5.0",
   "category": "monitoring",
-  "type": "open-source",
+  "type": "open-source,",
   "runtime": "static",
-  "tags": ["example", "template", "static","official"],
+  "tags": [ "template", "local API","official"],
   "entry": "frontend/index.html",
   "configSchema": [],
   "links": {

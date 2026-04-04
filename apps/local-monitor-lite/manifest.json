@@ -7,7 +7,7 @@
   "category": "monitoring",
   "type": "open-source",
   "runtime": "static",
-  "tags": ["static", "dashboard", "iammeter", "monitorjson"],
+  "tags": [ "Local API" ],
   "entry": "frontend/index.html",
   "configSchema": [],
   "links": {
