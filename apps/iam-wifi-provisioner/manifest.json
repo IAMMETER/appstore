@@ -1,0 +1,20 @@
+{
+  "id": "iam-wifi-provisioner",
+  "name": "IAM WiFi Provisioner",
+  "author": "miwyf",
+  "description": "Windows desktop batch Wi-Fi provisioning tool for IAMMETER devices. Includes direct EXE download, Python source, and setup documentation.",
+  "version": "1.0.0",
+  "category": "tooling",
+  "type": "open-source",
+  "runtime": "static",
+  "tags": ["wifi", "provisioning", "windows", "desktop", "batch"],
+  "entry": "frontend/index.html",
+  "configSchema": [],
+  "links": {
+    "homepage": "https://github.com/IAMMETER/appstore/tree/main/apps/iam-wifi-provisioner",
+    "docs": "https://github.com/IAMMETER/appstore/blob/main/apps/iam-wifi-provisioner/README.md",
+    "source": "https://github.com/IAMMETER/appstore",
+    "preview": "https://iammeter.github.io/appstore/apps/iam-wifi-provisioner/frontend/index.html",
+    "screenshot": "https://iammeter.github.io/appstore/apps/iam-wifi-provisioner/screenshot.jpg"
+  }
+}
