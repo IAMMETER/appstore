@@ -1,0 +1,20 @@
+{
+  "id": "wpc-api-test",
+  "name": "WPC API Test",
+  "author": "miwyf",
+  "description": "Interactive Swagger UI test tool for WPC local HTTP APIs, including monitor, Wi-Fi, advanced controller settings, branding, power control, and maintenance endpoints.",
+  "version": "1.0.0",
+  "category": "tooling",
+  "type": "open-source",
+  "runtime": "static",
+  "tags": ["Local API", "WPC", "swagger", "testing"],
+  "entry": "frontend/index.html",
+  "configSchema": [],
+  "links": {
+    "homepage": "https://github.com/IAMMETER/appstore/tree/main/apps/wpc-api-test",
+    "docs": "https://github.com/IAMMETER/appstore/blob/main/apps/wpc-api-test/README.md",
+    "source": "https://github.com/IAMMETER/appstore",
+    "preview": "https://iammeter.github.io/appstore/apps/wpc-api-test/frontend/index.html",
+    "screenshot": "https://iammeter.github.io/appstore/apps/wpc-api-test/screenshot.jpg"
+  }
+}

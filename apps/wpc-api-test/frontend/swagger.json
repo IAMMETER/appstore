@@ -1,0 +1,825 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "WPC Local HTTP API",
+    "version": "1.0.0",
+    "description": "Interactive test specification for WPC controller local HTTP APIs. Based on the WPC section in apps/wem-api/local_api.md."
+  },
+  "servers": [
+    {
+      "url": "http://11.11.11.1",
+      "description": "Default AP mode address"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Common",
+      "description": "Shared status and network APIs used by WPC devices."
+    },
+    {
+      "name": "WPC Control",
+      "description": "WPC power control and advanced controller settings APIs."
+    },
+    {
+      "name": "Maintenance",
+      "description": "Restart, reset, and device information APIs."
+    }
+  ],
+  "paths": {
+    "/api/monitor": {
+      "get": {
+        "tags": ["Common"],
+        "summary": "Get current WPC status and control data",
+        "description": "Returns Wi-Fi status, device identity, and controller fields such as gridPower, maxPower, setPower, setPowerMode, meterAddress, meterOnline, threshold, hysteresis, startHour, stopHour, tzOffset, meterType, and meterConfig.",
+        "responses": {
+          "200": {
+            "description": "Current WPC monitor data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WpcMonitor"
+                },
+                "example": {
+                  "ssid": "wifi-name",
+                  "sig": 100,
+                  "mac": "B0F893000001",
+                  "version": "i.91.xxx",
+                  "server": "em",
+                  "SN": "12345678",
+                  "gridPower": 500,
+                  "maxPower": 3600,
+                  "setPower": 1000,
+                  "setPowerMode": 0,
+                  "meterAddress": "192.168.1.10",
+                  "meterOnline": 1,
+                  "threshold": 0,
+                  "hysteresis": 0,
+                  "startHour": 0,
+                  "stopHour": 23,
+                  "tzOffset": 0,
+                  "meterType": 0,
+                  "meterConfig": "1,1,1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wifidata": {
+      "get": {
+        "tags": ["Common"],
+        "summary": "Get Wi-Fi and network settings",
+        "responses": {
+          "200": {
+            "description": "Wi-Fi and upload settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WifiData"
+                },
+                "example": {
+                  "version": "i.91.xxx",
+                  "SN": "12345678",
+                  "mac": "B0F893000001",
+                  "type": "PM",
+                  "ssid": "wifi-name",
+                  "ip": "192.168.1.100",
+                  "netmask": "255.255.255.0",
+                  "gw": "192.168.1.1",
+                  "dns": "192.168.1.1",
+                  "dhcp": 1,
+                  "runMode": "mqtt",
+                  "uploadAddress": "mqtt://example.com:1883",
+                  "netmeter": 0,
+                  "uploadinterval": 60
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wifiaplist": {
+      "get": {
+        "tags": ["Common"],
+        "summary": "Scan nearby Wi-Fi networks",
+        "responses": {
+          "200": {
+            "description": "Nearby Wi-Fi networks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WifiAp"
+                  }
+                },
+                "example": [
+                  {
+                    "ssid": "example-wifi",
+                    "signal": 88
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/getbrand": {
+      "get": {
+        "tags": ["Common"],
+        "summary": "Get local Web UI branding",
+        "responses": {
+          "200": {
+            "description": "Branding configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandSettings"
+                },
+                "example": {
+                  "showIammeter": 1,
+                  "brandText": "IAMMETER",
+                  "apSsid": "FactoryAP"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/setbrand": {
+      "post": {
+        "tags": ["Common"],
+        "summary": "Set local Web UI branding",
+        "description": "All fields are optional, but at least one field must be present. brandText is ASCII up to 20 bytes. apSsid is ASCII up to 18 bytes.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrandSettings"
+              },
+              "example": {
+                "showIammeter": 0,
+                "brandText": "Factory",
+                "apSsid": "FactoryAP"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          }
+        }
+      }
+    },
+    "/api/setwifiadv": {
+      "post": {
+        "tags": ["Common"],
+        "summary": "Set Wi-Fi and IP settings",
+        "description": "Saves Wi-Fi and IP settings. This endpoint saves configuration and reboots after responding.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WifiAdvancedSettings"
+              },
+              "examples": {
+                "dhcp": {
+                  "summary": "DHCP",
+                  "value": {
+                    "ssid": "my-wifi",
+                    "pwd": "password",
+                    "dhcp": true
+                  }
+                },
+                "staticIp": {
+                  "summary": "Static IP",
+                  "value": {
+                    "ssid": "my-wifi",
+                    "pwd": "password",
+                    "dhcp": false,
+                    "ip": "192.168.1.80",
+                    "netmask": "255.255.255.0",
+                    "gw": "192.168.1.1",
+                    "dns": "192.168.1.1"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          }
+        }
+      }
+    },
+    "/api/getadv": {
+      "get": {
+        "tags": ["WPC Control"],
+        "summary": "Get WPC advanced settings",
+        "responses": {
+          "200": {
+            "description": "WPC advanced settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WpcAdvancedSettings"
+                },
+                "example": {
+                  "setPowerMode": 0,
+                  "meterConfig": "1,1,1",
+                  "threshold": 0,
+                  "hysteresis": 0,
+                  "tzOffset": 0,
+                  "startHour": 0,
+                  "stopHour": 23,
+                  "meterType": 0,
+                  "restorePower": 0,
+                  "ntpServer": "pool.ntp.org",
+                  "haDiscovery": 0,
+                  "mqttEnabled": 0,
+                  "mqttAddress": "mqtt://example.com:1883",
+                  "mqttUsername": "user",
+                  "mqttPassword": "password",
+                  "meterList": "iMeter,virtualTCP",
+                  "setPowerModeList": "Manual,Auto",
+                  "maxPower": 3600,
+                  "setPower": 1000,
+                  "meterAddress": "192.168.1.10",
+                  "uploadInterval": 60
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/setadv": {
+      "post": {
+        "tags": ["WPC Control"],
+        "summary": "Set WPC advanced settings",
+        "description": "Saves WPC advanced settings. Some changes require reboot; the firmware sends the JSON response first, saves configuration, waits briefly, and then reboots if needed.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WpcAdvancedSettings"
+              },
+              "example": {
+                "setPower": 1000,
+                "setPowerMode": 0,
+                "maxPower": 3600,
+                "meterAddress": "192.168.1.10",
+                "uploadInterval": 60
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          }
+        }
+      }
+    },
+    "/api/setpower": {
+      "get": {
+        "tags": ["WPC Control"],
+        "summary": "Get or set current set power",
+        "parameters": [
+          {
+            "name": "value",
+            "in": "query",
+            "required": false,
+            "description": "Set power in watts.",
+            "schema": {
+              "type": "integer"
+            },
+            "example": 1000
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current or updated set power",
+            "content": {
+              "application/json": {
+                "example": {
+                  "setpower": 1000
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/maxpower": {
+      "get": {
+        "tags": ["WPC Control"],
+        "summary": "Get or set maximum power",
+        "parameters": [
+          {
+            "name": "value",
+            "in": "query",
+            "required": false,
+            "description": "Maximum power in watts.",
+            "schema": {
+              "type": "integer"
+            },
+            "example": 3600
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current or updated maximum power",
+            "content": {
+              "application/json": {
+                "example": {
+                  "maxpower": 3600
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/automode": {
+      "get": {
+        "tags": ["WPC Control"],
+        "summary": "Get or set auto/manual mode",
+        "description": "Without query parameters, returns auto/manual mode. Use turn_on to enable automatic mode or turn_off to disable automatic mode.",
+        "parameters": [
+          {
+            "name": "turn_on",
+            "in": "query",
+            "required": false,
+            "description": "Enable automatic mode. Value is ignored by firmware route matching.",
+            "schema": {
+              "type": "string"
+            },
+            "allowEmptyValue": true
+          },
+          {
+            "name": "turn_off",
+            "in": "query",
+            "required": false,
+            "description": "Disable automatic mode. Value is ignored by firmware route matching.",
+            "schema": {
+              "type": "string"
+            },
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current or updated auto mode",
+            "content": {
+              "application/json": {
+                "example": {
+                  "automode": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sntpstatus": {
+      "get": {
+        "tags": ["Common"],
+        "summary": "Get SNTP synchronization status",
+        "responses": {
+          "200": {
+            "description": "SNTP status. Exact fields depend on firmware.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/energyhistory": {
+      "get": {
+        "tags": ["Common"],
+        "summary": "Get local energy history",
+        "responses": {
+          "200": {
+            "description": "Energy history. Exact structure depends on firmware.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/restart": {
+      "get": {
+        "tags": ["Maintenance"],
+        "summary": "Restart device or reset Wi-Fi/settings",
+        "description": "Without query parameters, reboots the device. With reset=true, factory-resets user Wi-Fi/settings except the serial number, then persists the change.",
+        "parameters": [
+          {
+            "name": "reset",
+            "in": "query",
+            "required": false,
+            "description": "Set to true to factory-reset user Wi-Fi/settings except the serial number.",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Restart or reset response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/totallyreset": {
+      "get": {
+        "tags": ["Maintenance"],
+        "summary": "Danger: factory-reset all settings including serial number",
+        "description": "Factory-resets all settings including the serial number, then reboots. Use carefully.",
+        "responses": {
+          "200": {
+            "description": "Reset response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ssid": {
+      "get": {
+        "tags": ["Maintenance"],
+        "summary": "Legacy AP SSID setter",
+        "description": "Stores the factory AP SSID and reboots. Prefer POST /api/setbrand with apSsid for new integrations.",
+        "parameters": [
+          {
+            "name": "value",
+            "in": "query",
+            "required": true,
+            "description": "Factory AP SSID.",
+            "schema": {
+              "type": "string",
+              "maxLength": 18
+            },
+            "example": "FactoryAP"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          }
+        }
+      }
+    },
+    "/info.xml": {
+      "get": {
+        "tags": ["Maintenance"],
+        "summary": "Get UPnP-style XML device information",
+        "responses": {
+          "200": {
+            "description": "XML device information",
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "OkMessage": {
+        "description": "Successful setter response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/OkMessage"
+            },
+            "example": {
+              "successful": 1,
+              "message": "ok"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "OkMessage": {
+        "type": "object",
+        "properties": {
+          "successful": {
+            "type": "integer",
+            "enum": [0, 1]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "WpcMonitor": {
+        "type": "object",
+        "properties": {
+          "ssid": {
+            "type": "string"
+          },
+          "sig": {
+            "type": "integer"
+          },
+          "mac": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "server": {
+            "type": "string"
+          },
+          "SN": {
+            "type": "string"
+          },
+          "gridPower": {
+            "type": "integer"
+          },
+          "maxPower": {
+            "type": "integer"
+          },
+          "setPower": {
+            "type": "integer"
+          },
+          "setPowerMode": {
+            "type": "integer",
+            "enum": [0, 1]
+          },
+          "meterAddress": {
+            "type": "string"
+          },
+          "meterOnline": {
+            "type": "integer",
+            "enum": [0, 1]
+          },
+          "threshold": {
+            "type": "integer"
+          },
+          "hysteresis": {
+            "type": "integer"
+          },
+          "startHour": {
+            "type": "integer"
+          },
+          "stopHour": {
+            "type": "integer"
+          },
+          "tzOffset": {
+            "type": "integer"
+          },
+          "meterType": {
+            "type": "integer"
+          },
+          "meterConfig": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "WifiData": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "SN": {
+            "type": "string"
+          },
+          "mac": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "ssid": {
+            "type": "string"
+          },
+          "ip": {
+            "type": "string"
+          },
+          "netmask": {
+            "type": "string"
+          },
+          "gw": {
+            "type": "string"
+          },
+          "dns": {
+            "type": "string"
+          },
+          "dhcp": {
+            "type": "integer",
+            "enum": [0, 1]
+          },
+          "runMode": {
+            "type": "string"
+          },
+          "uploadAddress": {
+            "type": "string"
+          },
+          "netmeter": {
+            "type": "integer"
+          },
+          "uploadinterval": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": true
+      },
+      "WifiAp": {
+        "type": "object",
+        "properties": {
+          "ssid": {
+            "type": "string"
+          },
+          "signal": {
+            "type": "integer"
+          }
+        }
+      },
+      "BrandSettings": {
+        "type": "object",
+        "properties": {
+          "showIammeter": {
+            "type": "integer",
+            "enum": [0, 1],
+            "description": "1 shows IAMMETER branding, 0 hides it."
+          },
+          "brandText": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "apSsid": {
+            "type": "string",
+            "maxLength": 18
+          }
+        },
+        "additionalProperties": false
+      },
+      "WifiAdvancedSettings": {
+        "type": "object",
+        "properties": {
+          "ssid": {
+            "type": "string"
+          },
+          "pwd": {
+            "type": "string"
+          },
+          "dhcp": {
+            "type": "boolean"
+          },
+          "ip": {
+            "type": "string"
+          },
+          "netmask": {
+            "type": "string"
+          },
+          "gw": {
+            "type": "string"
+          },
+          "dns": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "WpcAdvancedSettings": {
+        "type": "object",
+        "properties": {
+          "setPower": {
+            "type": "integer",
+            "description": "Current set power."
+          },
+          "setPowerMode": {
+            "type": "integer",
+            "description": "0 manual, 1 auto.",
+            "enum": [0, 1]
+          },
+          "maxPower": {
+            "type": "integer",
+            "description": "Maximum power."
+          },
+          "meterAddress": {
+            "type": "string",
+            "description": "Meter address, optionally host:port. Default port is 502 if omitted."
+          },
+          "meterConfig": {
+            "type": "string",
+            "description": "Meter phase/ratio config, such as 1,1,1."
+          },
+          "threshold": {
+            "type": "integer",
+            "description": "Auto-control threshold."
+          },
+          "hysteresis": {
+            "type": "integer",
+            "description": "Auto-control hysteresis."
+          },
+          "tzOffset": {
+            "type": "integer",
+            "description": "Timezone offset."
+          },
+          "startHour": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 23
+          },
+          "stopHour": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 23
+          },
+          "meterType": {
+            "type": "integer",
+            "description": "Meter source type."
+          },
+          "restorePower": {
+            "type": "integer",
+            "description": "Restore power setting."
+          },
+          "ntpServer": {
+            "type": "string"
+          },
+          "mqttAddress": {
+            "type": "string"
+          },
+          "mqttUsername": {
+            "type": "string"
+          },
+          "mqttPassword": {
+            "type": "string"
+          },
+          "uploadInterval": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "haDiscovery": {
+            "type": "integer",
+            "enum": [0, 1]
+          },
+          "mqttEnabled": {
+            "type": "integer",
+            "enum": [0, 1]
+          },
+          "meterList": {
+            "type": "string",
+            "readOnly": true
+          },
+          "setPowerModeList": {
+            "type": "string",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

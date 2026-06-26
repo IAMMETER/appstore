@@ -2,170 +2,305 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>IAMMETER API Explorer</title>
-      <script async src="https://www.googletagmanager.com/gtag/js?id=G-79SDZHZYFD"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-79SDZHZYFD', {
-        page_title: 'Open APP from github',
-        page_path: '/githubapp/iammeter-local-api-explorer'
-      });
-    </script>
-  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IAMMETER Local API Explorer</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-79SDZHZYFD"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-79SDZHZYFD', {
+      page_title: 'Open APP from github',
+      page_path: '/githubapp/iammeter-local-api-explorer'
+    });
+  </script>
   <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #5f6b7a;
+      --line: #d8dee8;
+      --accent: #0f766e;
+      --accent-strong: #0b5d56;
+      --warn-bg: #fff7ed;
+      --warn-line: #fed7aa;
+      --warn-text: #8a4b12;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      padding: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.45;
     }
 
-    .topbar-custom {
-      padding: 12px 20px;
-      background: #f7f7f7;
-      border-bottom: 1px solid #ddd;
-      display: flex;
+    main {
+      width: min(960px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 42px 0;
+    }
+
+    header {
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 760px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      box-shadow: 0 8px 22px rgba(23, 32, 51, 0.06);
+    }
+
+    .notice {
+      margin-bottom: 18px;
+      padding: 12px 14px;
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-line);
+      border-radius: 6px;
+      color: var(--warn-text);
+      font-size: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 11px;
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .choice {
+      display: grid;
       gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-      font-family: Arial, sans-serif;
+      min-height: 176px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
     }
 
-    .topbar-custom label {
-      font-size: 14px;
-      color: #333;
+    .choice h2 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0;
     }
 
-    .topbar-custom input {
-      width: 360px;
-      max-width: 100%;
-      padding: 6px 10px;
+    .choice p {
+      margin: 0;
+      color: var(--muted);
       font-size: 14px;
     }
 
-    .topbar-custom button {
-      padding: 7px 14px;
+    .choice ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .choice button {
+      align-self: end;
+      min-height: 38px;
+      border: 0;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #ffffff;
+      padding: 9px 13px;
       font-size: 14px;
+      font-weight: 700;
       cursor: pointer;
     }
 
-    .topbar-custom .hint {
-      font-size: 12px;
-      color: #666;
+    .choice button:hover {
+      background: var(--accent-strong);
+    }
+
+    .error {
+      display: none;
+      margin-top: 12px;
+      color: #b42318;
+      font-size: 14px;
+    }
+
+    .error.visible {
+      display: block;
+    }
+
+    @media (max-width: 720px) {
+      main {
+        width: min(100% - 24px, 960px);
+        padding: 26px 0;
+      }
+
+      h1 {
+        font-size: 25px;
+      }
+
+      .panel {
+        padding: 16px;
+      }
+
+      .choices {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="topbar-custom">
-    <label for="serverInput">Meter IP:</label>
-    <input id="serverInput" type="text" placeholder="Enter meter IP, e.g., 10.10.30.35 or http://10.10.30.35" />
-    <button id="applyBtn">Apply</button>
-    <button id="resetBtn">Reset</button>
-    <span class="hint">Changes will be saved to browser and persist after refresh</span>
-  </div>
+  <main>
+    <header>
+      <h1>IAMMETER Local API Explorer</h1>
+      <p class="lead">Enter the device IP address on the same LAN, then choose the matching product type to open the dedicated API test page.</p>
+    </header>
 
-  <div id="swagger-ui"></div>
+    <section class="panel" aria-label="API explorer selector">
+      <div class="notice">
+        Your browser must be on the same local network as the IAMMETER device. Enter only the device IP if you prefer; the page will add http:// automatically.
+      </div>
 
-  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
-  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-standalone-preset.js"></script>
+      <div class="field">
+        <label for="deviceIp">Device IP</label>
+        <input id="deviceIp" type="text" placeholder="Example: 192.168.1.80 or http://192.168.1.80" autocomplete="off" />
+        <div class="hint">The IP will be passed to the selected test page and saved in this browser.</div>
+      </div>
+
+      <div class="choices">
+        <article class="choice">
+          <h2>WEM API Test</h2>
+          <p>For WEM energy meter models and meter-specific configuration APIs.</p>
+          <ul>
+            <li>Monitor and Wi-Fi APIs</li>
+            <li>Advanced meter settings</li>
+            <li>Legacy WEM endpoints</li>
+          </ul>
+          <button type="button" data-target="wem">Open WEM Test</button>
+        </article>
+
+        <article class="choice">
+          <h2>WPC API Test</h2>
+          <p>For WPC controller models and power-control configuration APIs.</p>
+          <ul>
+            <li>Monitor and Wi-Fi APIs</li>
+            <li>Set power and max power</li>
+            <li>Auto/manual mode</li>
+          </ul>
+          <button type="button" data-target="wpc">Open WPC Test</button>
+        </article>
+      </div>
+
+      <div id="error" class="error" role="alert">Please enter the device IP address first.</div>
+    </section>
+  </main>
+
   <script>
-    const STORAGE_KEY = "swagger_custom_server";
-    const DEFAULT_SWAGGER_URL = "./swagger.json";
-
-    let ui = null;
-    let originalSpec = null;
-
-    async function loadSpec() {
-      const res = await fetch(DEFAULT_SWAGGER_URL);
-      if (!res.ok) {
-        throw new Error("Failed to load swagger.json");
+    const CONFIG = {
+      wem: {
+        storageKey: "wem_api_test_server",
+        url: "../../wem-api-test/frontend/index.html"
+      },
+      wpc: {
+        storageKey: "wpc_api_test_server",
+        url: "../../wpc-api-test/frontend/index.html"
       }
-      return await res.json();
-    }
+    };
 
-    function getSavedServer() {
-      return localStorage.getItem(STORAGE_KEY) || "";
-    }
+    const SHARED_STORAGE_KEY = "iammeter_local_api_explorer_server";
+    const input = document.getElementById("deviceIp");
+    const error = document.getElementById("error");
 
-    function saveServer(url) {
-      localStorage.setItem(STORAGE_KEY, url);
-    }
+    input.value = localStorage.getItem(SHARED_STORAGE_KEY) || "";
 
-    function clearServer() {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-
-    function buildSpec(spec, customServer) {
-      const newSpec = JSON.parse(JSON.stringify(spec));
-
-      if (customServer && customServer.trim()) {
-        newSpec.servers = [
-          {
-            url: customServer.trim(),
-            description: "Custom Server"
-          }
-        ];
+    function normalizeServer(value) {
+      const trimmed = value.trim();
+      if (!trimmed) return "";
+      if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+        return trimmed;
       }
-
-      return newSpec;
+      return "http://" + trimmed;
     }
 
-    function renderSwagger(spec) {
-      document.getElementById("swagger-ui").innerHTML = "";
-
-      ui = SwaggerUIBundle({
-        spec: spec,
-        dom_id: "#swagger-ui",
-        deepLinking: true,
-        presets: [
-          SwaggerUIBundle.presets.apis,
-          SwaggerUIStandalonePreset
-        ],
-        layout: "BaseLayout"
-      });
-    }
-
-    async function initSwagger() {
-      try {
-        originalSpec = await loadSpec();
-
-        const savedServer = getSavedServer();
-        document.getElementById("serverInput").value = savedServer;
-
-        const specToRender = buildSpec(originalSpec, savedServer);
-        renderSwagger(specToRender);
-      } catch (err) {
-        console.error(err);
-        document.getElementById("swagger-ui").innerHTML =
-          "<div style='padding:20px;color:red;'>Failed to load Swagger: " + err.message + "</div>";
-      }
-    }
-
-    document.getElementById("applyBtn").addEventListener("click", () => {
-      let server = document.getElementById("serverInput").value.trim();
+    function openTarget(target) {
+      const config = CONFIG[target];
+      const server = normalizeServer(input.value);
 
       if (!server) {
-        alert("Please enter meter IP address");
+        error.classList.add("visible");
+        input.focus();
         return;
       }
 
-      // Auto-add http:// if no protocol specified
-      if (!server.startsWith("http://") && !server.startsWith("https://")) {
-        server = "http://" + server;
+      error.classList.remove("visible");
+      localStorage.setItem(SHARED_STORAGE_KEY, server);
+      localStorage.setItem(config.storageKey, server);
+      window.location.href = config.url;
+    }
+
+    document.querySelectorAll("button[data-target]").forEach((button) => {
+      button.addEventListener("click", () => openTarget(button.dataset.target));
+    });
+
+    input.addEventListener("input", () => {
+      error.classList.remove("visible");
+    });
+
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        openTarget("wem");
       }
-
-      saveServer(server);
-      const specToRender = buildSpec(originalSpec, server);
-      renderSwagger(specToRender);
     });
-
-    document.getElementById("resetBtn").addEventListener("click", () => {
-      clearServer();
-      document.getElementById("serverInput").value = "";
-      renderSwagger(originalSpec);
-    });
-
-    initSwagger();
   </script>
 </body>
 </html>

@@ -1,0 +1,906 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "WEM Local HTTP API",
+    "version": "1.0.0",
+    "description": "Interactive test specification for WEM meter local HTTP APIs. Based on apps/wem-api/local_api.md."
+  },
+  "servers": [
+    {
+      "url": "http://11.11.11.1",
+      "description": "Default AP mode address"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Common",
+      "description": "Shared status and network APIs used by WEM devices."
+    },
+    {
+      "name": "WEM Advanced",
+      "description": "Consolidated WEM configuration APIs."
+    },
+    {
+      "name": "WEM Legacy",
+      "description": "Legacy WEM single-setting GET APIs kept for compatibility."
+    },
+    {
+      "name": "Maintenance",
+      "description": "Restart, reset, and device information APIs."
+    }
+  ],
+  "paths": {
+    "/api/monitor": {
+      "get": {
+        "tags": ["Common"],
+        "summary": "Get current WEM status and real-time meter data",
+        "description": "Returns Wi-Fi status, device identity, model, and meter data. WEM Datas rows normally use [voltage, current, activePower, importEnergy, exportEnergy, frequency, powerFactor].",
+        "responses": {
+          "200": {
+            "description": "Current WEM monitor data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WemMonitor"
+                },
+                "example": {
+                  "ssid": "wifi-name",
+                  "sig": 100,
+                  "mac": "B0F893000001",
+                  "version": "i.91.xxx",
+                  "server": "em",
+                  "SN": "12345678",
+                  "model": "WEM3080T",
+                  "Datas": [
+                    [220.0, 9.99, 2198.0, 11.337, 11.201, 49.99, 1.0]
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wifidata": {
+      "get": {
+        "tags": ["Common"],
+        "summary": "Get Wi-Fi and network settings",
+        "responses": {
+          "200": {
+            "description": "Wi-Fi and upload settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WifiData"
+                },
+                "example": {
+                  "version": "i.91.xxx",
+                  "SN": "12345678",
+                  "mac": "B0F893000001",
+                  "type": "PM",
+                  "ssid": "wifi-name",
+                  "ip": "192.168.1.100",
+                  "netmask": "255.255.255.0",
+                  "gw": "192.168.1.1",
+                  "dns": "192.168.1.1",
+                  "dhcp": 1,
+                  "runMode": "mqtt",
+                  "uploadAddress": "mqtt://example.com:1883",
+                  "netmeter": 0,
+                  "uploadinterval": 60
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wifiaplist": {
+      "get": {
+        "tags": ["Common"],
+        "summary": "Scan nearby Wi-Fi networks",
+        "responses": {
+          "200": {
+            "description": "Nearby Wi-Fi networks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WifiAp"
+                  }
+                },
+                "example": [
+                  {
+                    "ssid": "example-wifi",
+                    "signal": 88
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/getbrand": {
+      "get": {
+        "tags": ["Common"],
+        "summary": "Get local Web UI branding",
+        "responses": {
+          "200": {
+            "description": "Branding configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandSettings"
+                },
+                "example": {
+                  "showIammeter": 1,
+                  "brandText": "IAMMETER",
+                  "apSsid": "FactoryAP"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/setbrand": {
+      "post": {
+        "tags": ["Common"],
+        "summary": "Set local Web UI branding",
+        "description": "All fields are optional, but at least one field must be present. brandText is ASCII up to 20 bytes. apSsid is ASCII up to 18 bytes.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrandSettings"
+              },
+              "examples": {
+                "full": {
+                  "summary": "Full update",
+                  "value": {
+                    "showIammeter": 0,
+                    "brandText": "Factory",
+                    "apSsid": "FactoryAP"
+                  }
+                },
+                "showIammeter": {
+                  "summary": "Show IAMMETER branding",
+                  "value": {
+                    "showIammeter": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          }
+        }
+      }
+    },
+    "/api/setwifiadv": {
+      "post": {
+        "tags": ["Common"],
+        "summary": "Set Wi-Fi and IP settings",
+        "description": "Saves Wi-Fi and IP settings. This endpoint saves configuration and reboots after responding.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WifiAdvancedSettings"
+              },
+              "examples": {
+                "dhcp": {
+                  "summary": "DHCP",
+                  "value": {
+                    "ssid": "my-wifi",
+                    "pwd": "password",
+                    "dhcp": true
+                  }
+                },
+                "staticIp": {
+                  "summary": "Static IP",
+                  "value": {
+                    "ssid": "my-wifi",
+                    "pwd": "password",
+                    "dhcp": false,
+                    "ip": "192.168.1.80",
+                    "netmask": "255.255.255.0",
+                    "gw": "192.168.1.1",
+                    "dns": "192.168.1.1"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          }
+        }
+      }
+    },
+    "/api/getadv": {
+      "get": {
+        "tags": ["WEM Advanced"],
+        "summary": "Get WEM advanced settings",
+        "responses": {
+          "200": {
+            "description": "WEM advanced settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WemAdvancedSettings"
+                },
+                "example": {
+                  "runMode": 3,
+                  "runModeList": "IAMMETER-cloud,tcp,http,mqtt,stand alone",
+                  "uploadAddress": "mqtts://mqtt.iammeter.com:8883",
+                  "mqttUsername": "user",
+                  "mqttPassword": "password",
+                  "ntpServer": "pool.ntp.org",
+                  "haDiscovery": 0,
+                  "uploadInterval": 60,
+                  "netmetering": 0,
+                  "ctcRatio": 1,
+                  "reactive": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/setadv": {
+      "post": {
+        "tags": ["WEM Advanced"],
+        "summary": "Set WEM advanced settings",
+        "description": "Saves WEM advanced settings. Some changes require reboot; the firmware sends the JSON response first, saves configuration, waits briefly, and then reboots if needed.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WemAdvancedSettings"
+              },
+              "example": {
+                "runMode": 3,
+                "uploadAddress": "mqtts://mqtt.iammeter.com:8883",
+                "uploadInterval": 60,
+                "mqttUsername": "user",
+                "mqttPassword": "pass",
+                "haDiscovery": 0
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          }
+        }
+      }
+    },
+    "/api/sntpstatus": {
+      "get": {
+        "tags": ["Common"],
+        "summary": "Get SNTP synchronization status",
+        "responses": {
+          "200": {
+            "description": "SNTP status. Exact fields depend on firmware.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/energyhistory": {
+      "get": {
+        "tags": ["Common"],
+        "summary": "Get local energy history",
+        "responses": {
+          "200": {
+            "description": "Energy history. Exact structure depends on firmware.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reactive": {
+      "get": {
+        "tags": ["WEM Legacy"],
+        "summary": "Get or set reactive-energy flag",
+        "parameters": [
+          {
+            "name": "x",
+            "in": "query",
+            "required": false,
+            "description": "0 disables reactive-energy mode, 1 enables it.",
+            "schema": {
+              "type": "integer",
+              "enum": [0, 1]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current or updated reactive flag",
+            "content": {
+              "application/json": {
+                "example": {
+                  "reactive": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mqttha": {
+      "get": {
+        "tags": ["WEM Legacy"],
+        "summary": "Get or set MQTT Home Assistant discovery flag",
+        "parameters": [
+          {
+            "name": "x",
+            "in": "query",
+            "required": false,
+            "description": "0 disables Home Assistant discovery, 1 enables it.",
+            "schema": {
+              "type": "integer",
+              "enum": [0, 1]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current or updated MQTT Home Assistant flag",
+            "content": {
+              "application/json": {
+                "example": {
+                  "mqttHA": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ratio": {
+      "get": {
+        "tags": ["WEM Legacy"],
+        "summary": "Get or set CT ratio",
+        "description": "Used by WEM3046T-style models.",
+        "parameters": [
+          {
+            "name": "x",
+            "in": "query",
+            "required": false,
+            "description": "CT ratio value.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1000
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current or updated CT ratio",
+            "content": {
+              "application/json": {
+                "example": {
+                  "CTratio": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/netmetering": {
+      "get": {
+        "tags": ["WEM Legacy"],
+        "summary": "Get or set net metering mode",
+        "description": "Current firmware implements netmetering. Older external documentation may spell it as netmetring.",
+        "parameters": [
+          {
+            "name": "nem",
+            "in": "query",
+            "required": false,
+            "description": "0 disables net metering, 1 enables it.",
+            "schema": {
+              "type": "integer",
+              "enum": [0, 1]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current or updated net metering mode",
+            "content": {
+              "application/json": {
+                "example": {
+                  "NEM": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ctcratio": {
+      "get": {
+        "tags": ["WEM Legacy"],
+        "summary": "Get or set CT-C ratio",
+        "parameters": [
+          {
+            "name": "ctc",
+            "in": "query",
+            "required": false,
+            "description": "CT-C ratio value.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current or updated CT-C ratio",
+            "content": {
+              "application/json": {
+                "example": {
+                  "ctcratio": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/uploadinterval": {
+      "get": {
+        "tags": ["WEM Legacy"],
+        "summary": "Get or set upload interval",
+        "parameters": [
+          {
+            "name": "x",
+            "in": "query",
+            "required": false,
+            "description": "Upload interval in seconds.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 60
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current or updated upload interval",
+            "content": {
+              "application/json": {
+                "example": {
+                  "uploadinterval": 60
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mqtt": {
+      "get": {
+        "tags": ["WEM Legacy"],
+        "summary": "Get or set MQTT username and password",
+        "description": "Without query parameters, returns MQTT username and password length. With user and pwd, sets MQTT credentials. Prefer POST /api/setadv for new integrations.",
+        "parameters": [
+          {
+            "name": "user",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "user"
+          },
+          {
+            "name": "pwd",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "password"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MQTT credential status",
+            "content": {
+              "application/json": {
+                "example": {
+                  "username": "user",
+                  "pwdlength": 6
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/basicauth": {
+      "get": {
+        "tags": ["WEM Legacy"],
+        "summary": "Get or set Basic Auth string",
+        "parameters": [
+          {
+            "name": "authstring",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "xxxx"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Basic Auth status",
+            "content": {
+              "application/json": {
+                "example": {
+                  "authstring": "xxxx",
+                  "pwdlength": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/restart": {
+      "get": {
+        "tags": ["Maintenance"],
+        "summary": "Restart device or reset Wi-Fi/settings",
+        "description": "Without query parameters, reboots the device. With reset=true, factory-resets user Wi-Fi/settings except the serial number, then persists the change.",
+        "parameters": [
+          {
+            "name": "reset",
+            "in": "query",
+            "required": false,
+            "description": "Set to true to factory-reset user Wi-Fi/settings except the serial number.",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Restart or reset response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/totallyreset": {
+      "get": {
+        "tags": ["Maintenance"],
+        "summary": "Danger: factory-reset all settings including serial number",
+        "description": "Factory-resets all settings including the serial number, then reboots. Use carefully.",
+        "responses": {
+          "200": {
+            "description": "Reset response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ssid": {
+      "get": {
+        "tags": ["Maintenance"],
+        "summary": "Legacy AP SSID setter",
+        "description": "Stores the factory AP SSID and reboots. Prefer POST /api/setbrand with apSsid for new integrations.",
+        "parameters": [
+          {
+            "name": "value",
+            "in": "query",
+            "required": true,
+            "description": "Factory AP SSID.",
+            "schema": {
+              "type": "string",
+              "maxLength": 18
+            },
+            "example": "FactoryAP"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          }
+        }
+      }
+    },
+    "/info.xml": {
+      "get": {
+        "tags": ["Maintenance"],
+        "summary": "Get UPnP-style XML device information",
+        "responses": {
+          "200": {
+            "description": "XML device information",
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "OkMessage": {
+        "description": "Successful setter response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/OkMessage"
+            },
+            "example": {
+              "successful": 1,
+              "message": "ok"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "OkMessage": {
+        "type": "object",
+        "properties": {
+          "successful": {
+            "type": "integer",
+            "enum": [0, 1]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "WemMonitor": {
+        "type": "object",
+        "properties": {
+          "ssid": {
+            "type": "string"
+          },
+          "sig": {
+            "type": "integer"
+          },
+          "mac": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "server": {
+            "type": "string"
+          },
+          "SN": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "Datas": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "nullable": true
+              }
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "WifiData": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "SN": {
+            "type": "string"
+          },
+          "mac": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "ssid": {
+            "type": "string"
+          },
+          "ip": {
+            "type": "string"
+          },
+          "netmask": {
+            "type": "string"
+          },
+          "gw": {
+            "type": "string"
+          },
+          "dns": {
+            "type": "string"
+          },
+          "dhcp": {
+            "type": "integer",
+            "enum": [0, 1]
+          },
+          "runMode": {
+            "type": "string"
+          },
+          "uploadAddress": {
+            "type": "string"
+          },
+          "netmeter": {
+            "type": "integer"
+          },
+          "uploadinterval": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": true
+      },
+      "WifiAp": {
+        "type": "object",
+        "properties": {
+          "ssid": {
+            "type": "string"
+          },
+          "signal": {
+            "type": "integer"
+          }
+        }
+      },
+      "BrandSettings": {
+        "type": "object",
+        "properties": {
+          "showIammeter": {
+            "type": "integer",
+            "enum": [0, 1],
+            "description": "1 shows IAMMETER branding, 0 hides it."
+          },
+          "brandText": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "apSsid": {
+            "type": "string",
+            "maxLength": 18
+          }
+        },
+        "additionalProperties": false
+      },
+      "WifiAdvancedSettings": {
+        "type": "object",
+        "properties": {
+          "ssid": {
+            "type": "string"
+          },
+          "pwd": {
+            "type": "string"
+          },
+          "dhcp": {
+            "type": "boolean"
+          },
+          "ip": {
+            "type": "string"
+          },
+          "netmask": {
+            "type": "string"
+          },
+          "gw": {
+            "type": "string"
+          },
+          "dns": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "WemAdvancedSettings": {
+        "type": "object",
+        "properties": {
+          "runMode": {
+            "type": "integer",
+            "description": "0 cloud, 1 TCP, 2 HTTP, 3 MQTT, 4 standalone.",
+            "enum": [0, 1, 2, 3, 4]
+          },
+          "runModeList": {
+            "type": "string",
+            "readOnly": true
+          },
+          "uploadAddress": {
+            "type": "string"
+          },
+          "mqttUsername": {
+            "type": "string"
+          },
+          "mqttPassword": {
+            "type": "string"
+          },
+          "ntpServer": {
+            "type": "string"
+          },
+          "haDiscovery": {
+            "type": "integer",
+            "enum": [0, 1]
+          },
+          "uploadInterval": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "netmetering": {
+            "type": "integer",
+            "enum": [0, 1]
+          },
+          "ctcRatio": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reactive": {
+            "type": "integer",
+            "enum": [0, 1]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
