@@ -26,7 +26,7 @@ Interactive Swagger UI test tool for WEM local HTTP APIs.
 - Admin Security APIs: `admin/status`, `admin/check`, `admin/recovery_challenge`, `admin/enable`, `admin/password`, and `admin/recovery`
 - Outbound TLS CA APIs: `tls/ca/status`, `tls/ca/upload`, `tls/ca/select`, and `tls/ca/delete`
 - WEM legacy configuration endpoints: `reactive`, `mqttha`, `ratio`, `netmetering`, `ctcratio`, `uploadinterval`, `mqtt`, and `basicauth`
-- Maintenance endpoints: `restart`, `totallyreset`, `ssid`, and `info.xml`
+- Maintenance endpoints: `restart`, `ssid`, and `info.xml`
 
 ## How to Use
 
@@ -39,7 +39,7 @@ Interactive Swagger UI test tool for WEM local HTTP APIs.
 ## Notes
 
 - Some setter APIs save configuration and reboot the device after the HTTP response.
-- Factory reset endpoints are included for completeness. Use them carefully.
+- The destructive `/api/totallyreset` endpoint is intentionally excluded.
 - Public endpoints are explicitly marked as not requiring Basic Auth. Other endpoints use the configured credentials when Admin Security is enabled.
 - Firmware upload and upgrade endpoints, including `/api/updateFirmware` and all OTA POST routes, are intentionally excluded.
 - The app is static and requires no backend.

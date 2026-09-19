@@ -206,6 +206,9 @@ curl "http://<device-ip>/api/totallyreset"
 
 Use this endpoint carefully.
 
+This destructive endpoint is documented for firmware compatibility but is intentionally
+excluded from the interactive Swagger UI unless the project owner explicitly requests it.
+
 #### `GET /api/ssid?value=<apSsid>`
 
 Legacy AP SSID setter. Stores `kv_ap_ssid` and reboots.

@@ -17,27 +17,27 @@
       "description": "Endpoints that remain accessible without HTTP Basic Authentication."
     },
     {
-      "name": "Admin Security - Public",
+      "name": "Admin-Security-Public",
       "description": "Public status and signed recovery endpoints. Recovery still requires a valid Ed25519 signature."
     },
     {
-      "name": "Admin Security - Authenticated",
+      "name": "Admin-Security-Authenticated",
       "description": "Administrator validation and credential configuration. Use Authorize when Admin Security is enabled."
     },
     {
-      "name": "WEM Configuration - Authenticated",
+      "name": "WEM-Configuration-Authenticated",
       "description": "WEM network, advanced configuration, and history endpoints. Basic Auth is required when Admin Security is enabled."
     },
     {
-      "name": "WEM Legacy - Authenticated",
+      "name": "WEM-Legacy-Authenticated",
       "description": "Legacy WEM single-setting APIs. Basic Auth is required when Admin Security is enabled."
     },
     {
-      "name": "TLS CA - Authenticated",
+      "name": "TLS-CA-Authenticated",
       "description": "Outbound MQTTS/HTTPS certificate verification. Admin Security and valid Basic Auth are required."
     },
     {
-      "name": "Maintenance - Authenticated",
+      "name": "Maintenance-Authenticated",
       "description": "Restart and reset operations. Basic Auth is required when Admin Security is enabled."
     }
   ],
@@ -207,7 +207,7 @@
     "/api/admin/status": {
       "get": {
         "tags": [
-          "Admin Security - Public"
+          "Admin-Security-Public"
         ],
         "summary": "Get Admin Security and local-service status",
         "description": "Returns Admin Security, signed recovery, Modbus/TCP, and SSDP states.",
@@ -236,7 +236,7 @@
     "/api/admin/recovery_challenge": {
       "get": {
         "tags": [
-          "Admin Security - Public"
+          "Admin-Security-Public"
         ],
         "summary": "Generate a one-time administrator recovery payload",
         "description": "Every call generates a new RAM-only nonce and invalidates the previous payload. Device reboot also invalidates it.",
@@ -263,7 +263,7 @@
     "/api/admin/recovery": {
       "post": {
         "tags": [
-          "Admin Security - Public"
+          "Admin-Security-Public"
         ],
         "summary": "Disable Admin Security using a signed recovery payload",
         "description": "No Basic Auth is required, but the payload must match the current nonce and have a valid Ed25519 signature.",
@@ -292,7 +292,7 @@
     "/api/admin/check": {
       "get": {
         "tags": [
-          "Admin Security - Authenticated"
+          "Admin-Security-Authenticated"
         ],
         "summary": "Validate administrator credentials",
         "description": "Returns successful=1 when the Basic Auth credentials are valid.",
@@ -312,7 +312,7 @@
     "/api/admin/enable": {
       "post": {
         "tags": [
-          "Admin Security - Authenticated"
+          "Admin-Security-Authenticated"
         ],
         "summary": "Enable or disable Admin Security and configure local services",
         "description": "Initial enablement works without credentials and requires username, password, and confirmPassword. Once enabled, valid Basic Auth is required. Service changes may reboot the device.",
@@ -350,7 +350,7 @@
     "/api/admin/password": {
       "post": {
         "tags": [
-          "Admin Security - Authenticated"
+          "Admin-Security-Authenticated"
         ],
         "summary": "Change administrator credentials",
         "description": "Requires valid Basic Auth and current credentials in the JSON body. New passwords require 8-32 visible ASCII characters, including a letter and a digit.",
@@ -387,7 +387,7 @@
     "/api/wifidata": {
       "get": {
         "tags": [
-          "WEM Configuration - Authenticated"
+          "WEM-Configuration-Authenticated"
         ],
         "summary": "Get Wi-Fi and network settings",
         "responses": {
@@ -429,7 +429,7 @@
     "/api/wifiaplist": {
       "get": {
         "tags": [
-          "WEM Configuration - Authenticated"
+          "WEM-Configuration-Authenticated"
         ],
         "summary": "Scan nearby Wi-Fi networks",
         "responses": {
@@ -464,7 +464,7 @@
     "/api/getadv": {
       "get": {
         "tags": [
-          "WEM Configuration - Authenticated"
+          "WEM-Configuration-Authenticated"
         ],
         "summary": "Get WEM advanced settings",
         "responses": {
@@ -503,7 +503,7 @@
     "/api/energyhistory": {
       "get": {
         "tags": [
-          "WEM Configuration - Authenticated"
+          "WEM-Configuration-Authenticated"
         ],
         "summary": "Get local energy history",
         "responses": {
@@ -530,7 +530,7 @@
     "/api/setbrand": {
       "post": {
         "tags": [
-          "WEM Configuration - Authenticated"
+          "WEM-Configuration-Authenticated"
         ],
         "summary": "Set local Web UI branding",
         "description": "All fields are optional, but at least one field must be present. brandText is ASCII up to 20 bytes. apSsid is ASCII up to 18 bytes.",
@@ -576,7 +576,7 @@
     "/api/setadv": {
       "post": {
         "tags": [
-          "WEM Configuration - Authenticated"
+          "WEM-Configuration-Authenticated"
         ],
         "summary": "Set WEM advanced settings",
         "description": "Saves WEM advanced settings. Some changes require reboot; the firmware sends the JSON response first, saves configuration, waits briefly, and then reboots if needed.",
@@ -614,7 +614,7 @@
     "/api/setwifiadv": {
       "post": {
         "tags": [
-          "WEM Configuration - Authenticated"
+          "WEM-Configuration-Authenticated"
         ],
         "summary": "Set Wi-Fi and IP settings",
         "description": "Saves Wi-Fi and IP settings. This endpoint saves configuration and reboots after responding.",
@@ -666,7 +666,7 @@
     "/api/reactive": {
       "get": {
         "tags": [
-          "WEM Legacy - Authenticated"
+          "WEM-Legacy-Authenticated"
         ],
         "summary": "Get or set reactive-energy flag",
         "parameters": [
@@ -707,7 +707,7 @@
     "/api/mqttha": {
       "get": {
         "tags": [
-          "WEM Legacy - Authenticated"
+          "WEM-Legacy-Authenticated"
         ],
         "summary": "Get or set MQTT Home Assistant discovery flag",
         "parameters": [
@@ -748,7 +748,7 @@
     "/api/ratio": {
       "get": {
         "tags": [
-          "WEM Legacy - Authenticated"
+          "WEM-Legacy-Authenticated"
         ],
         "summary": "Get or set CT ratio",
         "description": "Used by WEM3046T-style models.",
@@ -788,7 +788,7 @@
     "/api/netmetering": {
       "get": {
         "tags": [
-          "WEM Legacy - Authenticated"
+          "WEM-Legacy-Authenticated"
         ],
         "summary": "Get or set net metering mode",
         "description": "Current firmware implements netmetering. Older external documentation may spell it as netmetring.",
@@ -830,7 +830,7 @@
     "/api/ctcratio": {
       "get": {
         "tags": [
-          "WEM Legacy - Authenticated"
+          "WEM-Legacy-Authenticated"
         ],
         "summary": "Get or set CT-C ratio",
         "parameters": [
@@ -869,7 +869,7 @@
     "/api/uploadinterval": {
       "get": {
         "tags": [
-          "WEM Legacy - Authenticated"
+          "WEM-Legacy-Authenticated"
         ],
         "summary": "Get or set upload interval",
         "parameters": [
@@ -908,7 +908,7 @@
     "/api/mqtt": {
       "get": {
         "tags": [
-          "WEM Legacy - Authenticated"
+          "WEM-Legacy-Authenticated"
         ],
         "summary": "Get or set MQTT username and password",
         "description": "Without query parameters, returns MQTT username and password length. With user and pwd, sets MQTT credentials. Prefer POST /api/setadv for new integrations.",
@@ -956,7 +956,7 @@
     "/api/basicauth": {
       "get": {
         "tags": [
-          "WEM Legacy - Authenticated"
+          "WEM-Legacy-Authenticated"
         ],
         "summary": "Get or set Basic Auth string",
         "parameters": [
@@ -994,7 +994,7 @@
     "/api/tls/ca/status": {
       "get": {
         "tags": [
-          "TLS CA - Authenticated"
+          "TLS-CA-Authenticated"
         ],
         "summary": "Get outbound TLS certificate-verification status",
         "description": "Returns the shared MQTTS/HTTPS verification mode and custom Root CA metadata. Admin Security must be enabled.",
@@ -1029,7 +1029,7 @@
     "/api/tls/ca/upload": {
       "post": {
         "tags": [
-          "TLS CA - Authenticated"
+          "TLS-CA-Authenticated"
         ],
         "summary": "Upload a custom PEM Root CA",
         "description": "Uploads a raw PEM certificate for outbound MQTTS/HTTPS verification. Maximum size is 3072 bytes. Uploading does not select custom mode.",
@@ -1060,7 +1060,7 @@
     "/api/tls/ca/select": {
       "post": {
         "tags": [
-          "TLS CA - Authenticated"
+          "TLS-CA-Authenticated"
         ],
         "summary": "Select outbound TLS verification mode",
         "description": "Selects builtin, custom, or none. Custom requires an uploaded valid CA. None disables certificate and hostname verification.",
@@ -1093,7 +1093,7 @@
     "/api/tls/ca/delete": {
       "post": {
         "tags": [
-          "TLS CA - Authenticated"
+          "TLS-CA-Authenticated"
         ],
         "summary": "Delete the custom Root CA",
         "description": "Deletes the custom CA and restores builtin verification mode.",
@@ -1113,7 +1113,7 @@
     "/api/restart": {
       "get": {
         "tags": [
-          "Maintenance - Authenticated"
+          "Maintenance-Authenticated"
         ],
         "summary": "Restart device or reset Wi-Fi/settings",
         "description": "Without query parameters, reboots the device. With reset=true, factory-resets user Wi-Fi/settings except the serial number, then persists the change.",
@@ -1149,38 +1149,10 @@
         }
       }
     },
-    "/api/totallyreset": {
-      "get": {
-        "tags": [
-          "Maintenance - Authenticated"
-        ],
-        "summary": "Danger: factory-reset all settings including serial number",
-        "description": "Factory-resets all settings including the serial number, then reboots. Use carefully.",
-        "responses": {
-          "200": {
-            "description": "Reset response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
     "/api/ssid": {
       "get": {
         "tags": [
-          "Maintenance - Authenticated"
+          "Maintenance-Authenticated"
         ],
         "summary": "Legacy AP SSID setter",
         "description": "Stores the factory AP SSID and reboots. Prefer POST /api/setbrand with apSsid for new integrations.",
