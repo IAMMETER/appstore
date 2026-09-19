@@ -7,7 +7,8 @@ Interactive Swagger UI test tool for WEM local HTTP APIs.
 - Test WEM local HTTP APIs directly from the browser.
 - Save the device address in browser storage.
 - Automatically add `http://` when only an IP address is entered.
-- Includes common WEM APIs, advanced settings APIs, branding APIs, Wi-Fi settings APIs, and legacy WEM configuration endpoints.
+- Includes public status APIs, Admin Security APIs, outbound TLS CA APIs, WEM configuration APIs, and legacy WEM endpoints.
+- Supports HTTP Basic Auth through Swagger UI's **Authorize** button.
 
 ## Included APIs
 
@@ -21,6 +22,9 @@ Interactive Swagger UI test tool for WEM local HTTP APIs.
 - `POST /api/setbrand`
 - `GET /api/sntpstatus`
 - `GET /api/energyhistory`
+- `GET /api/monitorjson` and `GET /monitorjson`
+- Admin Security APIs: `admin/status`, `admin/check`, `admin/recovery_challenge`, `admin/enable`, `admin/password`, and `admin/recovery`
+- Outbound TLS CA APIs: `tls/ca/status`, `tls/ca/upload`, `tls/ca/select`, and `tls/ca/delete`
 - WEM legacy configuration endpoints: `reactive`, `mqttha`, `ratio`, `netmetering`, `ctcratio`, `uploadinterval`, `mqtt`, and `basicauth`
 - Maintenance endpoints: `restart`, `totallyreset`, `ssid`, and `info.xml`
 
@@ -29,12 +33,15 @@ Interactive Swagger UI test tool for WEM local HTTP APIs.
 1. Open the app.
 2. Enter the WEM device IP, for example `192.168.1.80` or `http://192.168.1.80`.
 3. Click **Apply**.
-4. Expand an API operation and use **Try it out**.
+4. If Admin Security is enabled, click **Authorize** and enter the device administrator username and password.
+5. Expand an API operation and use **Try it out**.
 
 ## Notes
 
 - Some setter APIs save configuration and reboot the device after the HTTP response.
 - Factory reset endpoints are included for completeness. Use them carefully.
+- Public endpoints are explicitly marked as not requiring Basic Auth. Other endpoints use the configured credentials when Admin Security is enabled.
+- Firmware upload and upgrade endpoints, including `/api/updateFirmware` and all OTA POST routes, are intentionally excluded.
 - The app is static and requires no backend.
 
 ## Source Documentation

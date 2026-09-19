@@ -62,7 +62,7 @@
     <input id="serverInput" type="text" placeholder="Enter WEM IP, e.g., 192.168.1.80 or http://192.168.1.80" />
     <button id="applyBtn">Apply</button>
     <button id="resetBtn">Reset</button>
-    <span class="hint">Saved in this browser. Some setter APIs may reboot the device.</span>
+    <span class="hint">Device address is saved in this browser. Use Authorize for Admin Security credentials. Credentials are not persisted by this page.</span>
   </div>
 
   <div id="swagger-ui"></div>
@@ -122,6 +122,7 @@
           SwaggerUIBundle.presets.apis,
           SwaggerUIStandalonePreset
         ],
+        persistAuthorization: false,
         layout: "BaseLayout"
       });
     }

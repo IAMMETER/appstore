@@ -2,8 +2,8 @@
   "openapi": "3.0.0",
   "info": {
     "title": "WEM Local HTTP API",
-    "version": "1.0.0",
-    "description": "Interactive test specification for WEM meter local HTTP APIs. Based on apps/wem-api/local_api.md."
+    "version": "1.1.0",
+    "description": "Interactive test specification for current WEM local HTTP APIs. Public endpoints are listed first. Use Authorize for endpoints protected by the optional Admin Security module."
   },
   "servers": [
     {
@@ -13,26 +13,40 @@
   ],
   "tags": [
     {
-      "name": "Common",
-      "description": "Shared status and network APIs used by WEM devices."
+      "name": "Public",
+      "description": "Endpoints that remain accessible without HTTP Basic Authentication."
     },
     {
-      "name": "WEM Advanced",
-      "description": "Consolidated WEM configuration APIs."
+      "name": "Admin Security - Public",
+      "description": "Public status and signed recovery endpoints. Recovery still requires a valid Ed25519 signature."
     },
     {
-      "name": "WEM Legacy",
-      "description": "Legacy WEM single-setting GET APIs kept for compatibility."
+      "name": "Admin Security - Authenticated",
+      "description": "Administrator validation and credential configuration. Use Authorize when Admin Security is enabled."
     },
     {
-      "name": "Maintenance",
-      "description": "Restart, reset, and device information APIs."
+      "name": "WEM Configuration - Authenticated",
+      "description": "WEM network, advanced configuration, and history endpoints. Basic Auth is required when Admin Security is enabled."
+    },
+    {
+      "name": "WEM Legacy - Authenticated",
+      "description": "Legacy WEM single-setting APIs. Basic Auth is required when Admin Security is enabled."
+    },
+    {
+      "name": "TLS CA - Authenticated",
+      "description": "Outbound MQTTS/HTTPS certificate verification. Admin Security and valid Basic Auth are required."
+    },
+    {
+      "name": "Maintenance - Authenticated",
+      "description": "Restart and reset operations. Basic Auth is required when Admin Security is enabled."
     }
   ],
   "paths": {
     "/api/monitor": {
       "get": {
-        "tags": ["Common"],
+        "tags": [
+          "Public"
+        ],
         "summary": "Get current WEM status and real-time meter data",
         "description": "Returns Wi-Fi status, device identity, model, and meter data. WEM Datas rows normally use [voltage, current, activePower, importEnergy, exportEnergy, frequency, powerFactor].",
         "responses": {
@@ -52,8 +66,40 @@
                   "SN": "12345678",
                   "model": "WEM3080T",
                   "Datas": [
-                    [220.0, 9.99, 2198.0, 11.337, 11.201, 49.99, 1.0]
+                    [
+                      220,
+                      9.99,
+                      2198,
+                      11.337,
+                      11.201,
+                      49.99,
+                      1
+                    ]
                   ]
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/monitorjson": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Get legacy meter data through the /api compatibility path",
+        "description": "Alias of GET /monitorjson. New integrations should prefer GET /api/monitor.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Legacy monitor JSON response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
                 }
               }
             }
@@ -61,9 +107,288 @@
         }
       }
     },
+    "/monitorjson": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Get legacy real-time meter data",
+        "description": "Legacy compatibility response. New integrations should prefer GET /api/monitor.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Legacy monitor JSON response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/getbrand": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Get local Web UI branding",
+        "responses": {
+          "200": {
+            "description": "Branding configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandSettings"
+                },
+                "example": {
+                  "showIammeter": 1,
+                  "brandText": "IAMMETER",
+                  "apSsid": "FactoryAP"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/sntpstatus": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Get SNTP synchronization status",
+        "responses": {
+          "200": {
+            "description": "SNTP status. Exact fields depend on firmware.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/info.xml": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Get UPnP-style XML device information",
+        "responses": {
+          "200": {
+            "description": "XML device information",
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/admin/status": {
+      "get": {
+        "tags": [
+          "Admin Security - Public"
+        ],
+        "summary": "Get Admin Security and local-service status",
+        "description": "Returns Admin Security, signed recovery, Modbus/TCP, and SSDP states.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Admin Security status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStatus"
+                },
+                "example": {
+                  "enabled": 1,
+                  "hasPassword": 1,
+                  "recoverySupported": 1,
+                  "modbusTcpEnabled": 0,
+                  "ssdpEnabled": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/recovery_challenge": {
+      "get": {
+        "tags": [
+          "Admin Security - Public"
+        ],
+        "summary": "Generate a one-time administrator recovery payload",
+        "description": "Every call generates a new RAM-only nonce and invalidates the previous payload. Device reboot also invalidates it.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "One-time Ed25519 recovery challenge.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryChallenge"
+                },
+                "example": {
+                  "successful": 1,
+                  "alg": "ed25519",
+                  "payload": "reset_admin|DEVICE_SN|DEVICE_MAC|ONE_TIME_NONCE"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/recovery": {
+      "post": {
+        "tags": [
+          "Admin Security - Public"
+        ],
+        "summary": "Disable Admin Security using a signed recovery payload",
+        "description": "No Basic Auth is required, but the payload must match the current nonce and have a valid Ed25519 signature.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryRequest"
+              },
+              "example": {
+                "payload": "reset_admin|DEVICE_SN|DEVICE_MAC|ONE_TIME_NONCE",
+                "signature": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          }
+        }
+      }
+    },
+    "/api/admin/check": {
+      "get": {
+        "tags": [
+          "Admin Security - Authenticated"
+        ],
+        "summary": "Validate administrator credentials",
+        "description": "Returns successful=1 when the Basic Auth credentials are valid.",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/admin/enable": {
+      "post": {
+        "tags": [
+          "Admin Security - Authenticated"
+        ],
+        "summary": "Enable or disable Admin Security and configure local services",
+        "description": "Initial enablement works without credentials and requires username, password, and confirmPassword. Once enabled, valid Basic Auth is required. Service changes may reboot the device.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminEnableRequest"
+              },
+              "example": {
+                "enable": 1,
+                "username": "admin",
+                "password": "ExamplePassword1",
+                "confirmPassword": "ExamplePassword1",
+                "modbusTcpEnabled": 0,
+                "ssdpEnabled": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/admin/password": {
+      "post": {
+        "tags": [
+          "Admin Security - Authenticated"
+        ],
+        "summary": "Change administrator credentials",
+        "description": "Requires valid Basic Auth and current credentials in the JSON body. New passwords require 8-32 visible ASCII characters, including a letter and a digit.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminPasswordRequest"
+              },
+              "example": {
+                "oldUsername": "admin",
+                "oldPassword": "ExamplePassword1",
+                "username": "admin",
+                "password": "NewPassword2",
+                "confirmPassword": "NewPassword2"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
     "/api/wifidata": {
       "get": {
-        "tags": ["Common"],
+        "tags": [
+          "WEM Configuration - Authenticated"
+        ],
         "summary": "Get Wi-Fi and network settings",
         "responses": {
           "200": {
@@ -91,13 +416,21 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/api/wifiaplist": {
       "get": {
-        "tags": ["Common"],
+        "tags": [
+          "WEM Configuration - Authenticated"
+        ],
         "summary": "Scan nearby Wi-Fi networks",
         "responses": {
           "200": {
@@ -118,36 +451,87 @@
                 ]
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
-    "/api/getbrand": {
+    "/api/getadv": {
       "get": {
-        "tags": ["Common"],
-        "summary": "Get local Web UI branding",
+        "tags": [
+          "WEM Configuration - Authenticated"
+        ],
+        "summary": "Get WEM advanced settings",
         "responses": {
           "200": {
-            "description": "Branding configuration",
+            "description": "WEM advanced settings",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BrandSettings"
+                  "$ref": "#/components/schemas/WemAdvancedSettings"
                 },
                 "example": {
-                  "showIammeter": 1,
-                  "brandText": "IAMMETER",
-                  "apSsid": "FactoryAP"
+                  "runMode": 3,
+                  "runModeList": "IAMMETER-cloud,tcp,http,mqtt,stand alone",
+                  "uploadAddress": "mqtts://mqtt.iammeter.com:8883",
+                  "mqttUsername": "user",
+                  "mqttPassword": "password",
+                  "ntpServer": "pool.ntp.org",
+                  "haDiscovery": 0,
+                  "uploadInterval": 60,
+                  "netmetering": 0,
+                  "ctcRatio": 1,
+                  "reactive": 0
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/energyhistory": {
+      "get": {
+        "tags": [
+          "WEM Configuration - Authenticated"
+        ],
+        "summary": "Get local energy history",
+        "responses": {
+          "200": {
+            "description": "Energy history. Exact structure depends on firmware.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/api/setbrand": {
       "post": {
-        "tags": ["Common"],
+        "tags": [
+          "WEM Configuration - Authenticated"
+        ],
         "summary": "Set local Web UI branding",
         "description": "All fields are optional, but at least one field must be present. brandText is ASCII up to 20 bytes. apSsid is ASCII up to 18 bytes.",
         "requestBody": {
@@ -179,13 +563,59 @@
         "responses": {
           "200": {
             "$ref": "#/components/responses/OkMessage"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/setadv": {
+      "post": {
+        "tags": [
+          "WEM Configuration - Authenticated"
+        ],
+        "summary": "Set WEM advanced settings",
+        "description": "Saves WEM advanced settings. Some changes require reboot; the firmware sends the JSON response first, saves configuration, waits briefly, and then reboots if needed.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WemAdvancedSettings"
+              },
+              "example": {
+                "runMode": 3,
+                "uploadAddress": "mqtts://mqtt.iammeter.com:8883",
+                "uploadInterval": 60,
+                "mqttUsername": "user",
+                "mqttPassword": "pass",
+                "haDiscovery": 0
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/api/setwifiadv": {
       "post": {
-        "tags": ["Common"],
+        "tags": [
+          "WEM Configuration - Authenticated"
+        ],
         "summary": "Set Wi-Fi and IP settings",
         "description": "Saves Wi-Fi and IP settings. This endpoint saves configuration and reboots after responding.",
         "requestBody": {
@@ -223,112 +653,21 @@
         "responses": {
           "200": {
             "$ref": "#/components/responses/OkMessage"
-          }
-        }
-      }
-    },
-    "/api/getadv": {
-      "get": {
-        "tags": ["WEM Advanced"],
-        "summary": "Get WEM advanced settings",
-        "responses": {
-          "200": {
-            "description": "WEM advanced settings",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WemAdvancedSettings"
-                },
-                "example": {
-                  "runMode": 3,
-                  "runModeList": "IAMMETER-cloud,tcp,http,mqtt,stand alone",
-                  "uploadAddress": "mqtts://mqtt.iammeter.com:8883",
-                  "mqttUsername": "user",
-                  "mqttPassword": "password",
-                  "ntpServer": "pool.ntp.org",
-                  "haDiscovery": 0,
-                  "uploadInterval": 60,
-                  "netmetering": 0,
-                  "ctcRatio": 1,
-                  "reactive": 0
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/setadv": {
-      "post": {
-        "tags": ["WEM Advanced"],
-        "summary": "Set WEM advanced settings",
-        "description": "Saves WEM advanced settings. Some changes require reboot; the firmware sends the JSON response first, saves configuration, waits briefly, and then reboots if needed.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/WemAdvancedSettings"
-              },
-              "example": {
-                "runMode": 3,
-                "uploadAddress": "mqtts://mqtt.iammeter.com:8883",
-                "uploadInterval": 60,
-                "mqttUsername": "user",
-                "mqttPassword": "pass",
-                "haDiscovery": 0
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/OkMessage"
-          }
-        }
-      }
-    },
-    "/api/sntpstatus": {
-      "get": {
-        "tags": ["Common"],
-        "summary": "Get SNTP synchronization status",
-        "responses": {
-          "200": {
-            "description": "SNTP status. Exact fields depend on firmware.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/energyhistory": {
-      "get": {
-        "tags": ["Common"],
-        "summary": "Get local energy history",
-        "responses": {
-          "200": {
-            "description": "Energy history. Exact structure depends on firmware.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true
-                }
-              }
-            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/api/reactive": {
       "get": {
-        "tags": ["WEM Legacy"],
+        "tags": [
+          "WEM Legacy - Authenticated"
+        ],
         "summary": "Get or set reactive-energy flag",
         "parameters": [
           {
@@ -338,7 +677,10 @@
             "description": "0 disables reactive-energy mode, 1 enables it.",
             "schema": {
               "type": "integer",
-              "enum": [0, 1]
+              "enum": [
+                0,
+                1
+              ]
             }
           }
         ],
@@ -352,13 +694,21 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/api/mqttha": {
       "get": {
-        "tags": ["WEM Legacy"],
+        "tags": [
+          "WEM Legacy - Authenticated"
+        ],
         "summary": "Get or set MQTT Home Assistant discovery flag",
         "parameters": [
           {
@@ -368,7 +718,10 @@
             "description": "0 disables Home Assistant discovery, 1 enables it.",
             "schema": {
               "type": "integer",
-              "enum": [0, 1]
+              "enum": [
+                0,
+                1
+              ]
             }
           }
         ],
@@ -382,13 +735,21 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/api/ratio": {
       "get": {
-        "tags": ["WEM Legacy"],
+        "tags": [
+          "WEM Legacy - Authenticated"
+        ],
         "summary": "Get or set CT ratio",
         "description": "Used by WEM3046T-style models.",
         "parameters": [
@@ -414,13 +775,21 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/api/netmetering": {
       "get": {
-        "tags": ["WEM Legacy"],
+        "tags": [
+          "WEM Legacy - Authenticated"
+        ],
         "summary": "Get or set net metering mode",
         "description": "Current firmware implements netmetering. Older external documentation may spell it as netmetring.",
         "parameters": [
@@ -431,7 +800,10 @@
             "description": "0 disables net metering, 1 enables it.",
             "schema": {
               "type": "integer",
-              "enum": [0, 1]
+              "enum": [
+                0,
+                1
+              ]
             }
           }
         ],
@@ -445,13 +817,21 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/api/ctcratio": {
       "get": {
-        "tags": ["WEM Legacy"],
+        "tags": [
+          "WEM Legacy - Authenticated"
+        ],
         "summary": "Get or set CT-C ratio",
         "parameters": [
           {
@@ -476,13 +856,21 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/api/uploadinterval": {
       "get": {
-        "tags": ["WEM Legacy"],
+        "tags": [
+          "WEM Legacy - Authenticated"
+        ],
         "summary": "Get or set upload interval",
         "parameters": [
           {
@@ -507,13 +895,21 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/api/mqtt": {
       "get": {
-        "tags": ["WEM Legacy"],
+        "tags": [
+          "WEM Legacy - Authenticated"
+        ],
         "summary": "Get or set MQTT username and password",
         "description": "Without query parameters, returns MQTT username and password length. With user and pwd, sets MQTT credentials. Prefer POST /api/setadv for new integrations.",
         "parameters": [
@@ -547,13 +943,21 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/api/basicauth": {
       "get": {
-        "tags": ["WEM Legacy"],
+        "tags": [
+          "WEM Legacy - Authenticated"
+        ],
         "summary": "Get or set Basic Auth string",
         "parameters": [
           {
@@ -577,13 +981,140 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/tls/ca/status": {
+      "get": {
+        "tags": [
+          "TLS CA - Authenticated"
+        ],
+        "summary": "Get outbound TLS certificate-verification status",
+        "description": "Returns the shared MQTTS/HTTPS verification mode and custom Root CA metadata. Admin Security must be enabled.",
+        "responses": {
+          "200": {
+            "description": "TLS CA status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TlsCaStatus"
+                },
+                "example": {
+                  "successful": 1,
+                  "mode": "builtin",
+                  "customCaValid": 0,
+                  "customCaLength": 0,
+                  "customCaSha256": "",
+                  "restartRequiredAfterChange": 1
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/tls/ca/upload": {
+      "post": {
+        "tags": [
+          "TLS CA - Authenticated"
+        ],
+        "summary": "Upload a custom PEM Root CA",
+        "description": "Uploads a raw PEM certificate for outbound MQTTS/HTTPS verification. Maximum size is 3072 bytes. Uploading does not select custom mode.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-pem-file": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/tls/ca/select": {
+      "post": {
+        "tags": [
+          "TLS CA - Authenticated"
+        ],
+        "summary": "Select outbound TLS verification mode",
+        "description": "Selects builtin, custom, or none. Custom requires an uploaded valid CA. None disables certificate and hostname verification.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TlsModeRequest"
+              },
+              "example": {
+                "mode": "builtin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/tls/ca/delete": {
+      "post": {
+        "tags": [
+          "TLS CA - Authenticated"
+        ],
+        "summary": "Delete the custom Root CA",
+        "description": "Deletes the custom CA and restores builtin verification mode.",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OkMessage"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/api/restart": {
       "get": {
-        "tags": ["Maintenance"],
+        "tags": [
+          "Maintenance - Authenticated"
+        ],
         "summary": "Restart device or reset Wi-Fi/settings",
         "description": "Without query parameters, reboots the device. With reset=true, factory-resets user Wi-Fi/settings except the serial number, then persists the change.",
         "parameters": [
@@ -608,13 +1139,21 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/api/totallyreset": {
       "get": {
-        "tags": ["Maintenance"],
+        "tags": [
+          "Maintenance - Authenticated"
+        ],
         "summary": "Danger: factory-reset all settings including serial number",
         "description": "Factory-resets all settings including the serial number, then reboots. Use carefully.",
         "responses": {
@@ -628,13 +1167,21 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/api/ssid": {
       "get": {
-        "tags": ["Maintenance"],
+        "tags": [
+          "Maintenance - Authenticated"
+        ],
         "summary": "Legacy AP SSID setter",
         "description": "Stores the factory AP SSID and reboots. Prefer POST /api/setbrand with apSsid for new integrations.",
         "parameters": [
@@ -653,29 +1200,12 @@
         "responses": {
           "200": {
             "$ref": "#/components/responses/OkMessage"
-          }
-        }
-      }
-    },
-    "/info.xml": {
-      "get": {
-        "tags": ["Maintenance"],
-        "summary": "Get UPnP-style XML device information",
-        "responses": {
-          "200": {
-            "description": "XML device information",
-            "content": {
-              "application/xml": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "text/xml": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -696,6 +1226,48 @@
             }
           }
         }
+      },
+      "Unauthorized": {
+        "description": "Administrator authentication is required or the supplied credentials are invalid.",
+        "headers": {
+          "WWW-Authenticate": {
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/OkMessage"
+            },
+            "example": {
+              "successful": 0,
+              "message": "Unauthorized"
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "Too many failed authentication attempts. Wait for Retry-After.",
+        "headers": {
+          "Retry-After": {
+            "schema": {
+              "type": "integer"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/OkMessage"
+            },
+            "example": {
+              "successful": 0,
+              "message": "Too many authentication failures. Try again later."
+            }
+          }
+        }
       }
     },
     "schemas": {
@@ -704,7 +1276,10 @@
         "properties": {
           "successful": {
             "type": "integer",
-            "enum": [0, 1]
+            "enum": [
+              0,
+              1
+            ]
           },
           "message": {
             "type": "string"
@@ -780,7 +1355,10 @@
           },
           "dhcp": {
             "type": "integer",
-            "enum": [0, 1]
+            "enum": [
+              0,
+              1
+            ]
           },
           "runMode": {
             "type": "string"
@@ -813,7 +1391,10 @@
         "properties": {
           "showIammeter": {
             "type": "integer",
-            "enum": [0, 1],
+            "enum": [
+              0,
+              1
+            ],
             "description": "1 shows IAMMETER branding, 0 hides it."
           },
           "brandText": {
@@ -860,7 +1441,13 @@
           "runMode": {
             "type": "integer",
             "description": "0 cloud, 1 TCP, 2 HTTP, 3 MQTT, 4 standalone.",
-            "enum": [0, 1, 2, 3, 4]
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
           },
           "runModeList": {
             "type": "string",
@@ -880,7 +1467,10 @@
           },
           "haDiscovery": {
             "type": "integer",
-            "enum": [0, 1]
+            "enum": [
+              0,
+              1
+            ]
           },
           "uploadInterval": {
             "type": "integer",
@@ -888,7 +1478,10 @@
           },
           "netmetering": {
             "type": "integer",
-            "enum": [0, 1]
+            "enum": [
+              0,
+              1
+            ]
           },
           "ctcRatio": {
             "type": "integer",
@@ -896,11 +1489,262 @@
           },
           "reactive": {
             "type": "integer",
-            "enum": [0, 1]
+            "enum": [
+              0,
+              1
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminStatus": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "hasPassword": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "recoverySupported": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "modbusTcpEnabled": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "ssdpEnabled": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "RecoveryChallenge": {
+        "type": "object",
+        "properties": {
+          "successful": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "alg": {
+            "type": "string",
+            "enum": [
+              "ed25519"
+            ]
+          },
+          "payload": {
+            "type": "string",
+            "example": "reset_admin|DEVICE_SN|DEVICE_MAC|ONE_TIME_NONCE"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RecoveryRequest": {
+        "type": "object",
+        "required": [
+          "payload",
+          "signature"
+        ],
+        "properties": {
+          "payload": {
+            "type": "string",
+            "example": "reset_admin|DEVICE_SN|DEVICE_MAC|ONE_TIME_NONCE"
+          },
+          "signature": {
+            "type": "string",
+            "minLength": 128,
+            "maxLength": 128,
+            "pattern": "^[0-9a-fA-F]{128}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminEnableRequest": {
+        "type": "object",
+        "required": [
+          "enable"
+        ],
+        "properties": {
+          "enable": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 8,
+            "maxLength": 32
+          },
+          "confirmPassword": {
+            "type": "string",
+            "format": "password",
+            "minLength": 8,
+            "maxLength": 32
+          },
+          "modbusTcpEnabled": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "ssdpEnabled": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminPasswordRequest": {
+        "type": "object",
+        "required": [
+          "oldUsername",
+          "oldPassword",
+          "username",
+          "password",
+          "confirmPassword"
+        ],
+        "properties": {
+          "oldUsername": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          },
+          "oldPassword": {
+            "type": "string",
+            "format": "password",
+            "minLength": 1,
+            "maxLength": 32
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 8,
+            "maxLength": 32
+          },
+          "confirmPassword": {
+            "type": "string",
+            "format": "password",
+            "minLength": 8,
+            "maxLength": 32
+          }
+        },
+        "additionalProperties": false
+      },
+      "TlsCaStatus": {
+        "type": "object",
+        "properties": {
+          "successful": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "builtin",
+              "custom",
+              "none"
+            ]
+          },
+          "customCaValid": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "customCaLength": {
+            "type": "integer"
+          },
+          "customCaSha256": {
+            "type": "string"
+          },
+          "restartRequiredAfterChange": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TlsModeRequest": {
+        "type": "object",
+        "required": [
+          "mode"
+        ],
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "builtin",
+              "custom",
+              "none"
+            ]
           }
         },
         "additionalProperties": false
       }
+    },
+    "securitySchemes": {
+      "basicAuth": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "Administrator username and password configured in the device Security tab."
+      }
     }
-  }
+  },
+  "security": [
+    {
+      "basicAuth": []
+    }
+  ]
 }

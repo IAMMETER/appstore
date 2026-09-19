@@ -39,6 +39,12 @@ Invalid JSON or invalid parameters usually return:
   - `POST /api/setbrand`
 - Several legacy single-setting GET APIs still exist for compatibility.
 - Some POST APIs save configuration and reboot the device after sending the HTTP response.
+- Firmware `i.91.065.3` and later support optional Admin Security. Use Swagger UI's
+  **Authorize** button to send HTTP Basic Auth credentials to protected APIs.
+- Public status and recovery endpoints do not require Basic Auth. The signed recovery
+  endpoint still requires a valid Ed25519 payload/signature pair.
+- Firmware upload and upgrade POST endpoints are intentionally excluded from the Swagger
+  test tool.
 
 ## Common APIs
 
@@ -68,6 +74,11 @@ For WEM meter models, the response contains meter data:
 ```
 
 For WPC controller models, the response contains controller-specific fields such as `gridPower`, `maxPower`, `setPower`, `setPowerMode`, `meterAddress`, `meterOnline`, `threshold`, `hysteresis`, `startHour`, `stopHour`, `tzOffset`, `meterType`, and `meterConfig`.
+
+#### `GET /api/monitorjson` and `GET /monitorjson`
+
+Return the legacy real-time meter payload. Both paths are public aliases. New integrations
+should prefer `GET /api/monitor`.
 
 If meter data is not ready yet, the response may contain null data and an upload packet index.
 
@@ -140,6 +151,35 @@ Returns SNTP synchronization status. The exact fields are produced by `send_sntp
 
 Returns locally stored energy history data. The exact structure is produced by `send_energy_history_json()`.
 
+### Admin Security GET APIs
+
+#### `GET /api/admin/status`
+
+Publicly returns Admin Security, signed recovery, Modbus/TCP, and SSDP status.
+
+```json
+{"enabled":1,"hasPassword":1,"recoverySupported":1,"modbusTcpEnabled":0,"ssdpEnabled":1}
+```
+
+#### `GET /api/admin/recovery_challenge`
+
+Publicly generates an Ed25519 recovery payload containing the device SN, MAC, and a
+one-time RAM nonce. Every request invalidates the previous payload. Device reboot also
+invalidates it.
+
+#### `GET /api/admin/check`
+
+Validates the HTTP Basic Auth credentials entered through Swagger **Authorize**. Valid
+credentials return `{"successful":1}`. Invalid credentials return HTTP `401`; repeated
+failures can return HTTP `429` with `Retry-After`.
+
+### TLS CA GET API
+
+#### `GET /api/tls/ca/status`
+
+Returns the shared outbound MQTTS/HTTPS certificate-verification mode and Custom Root CA
+metadata. Admin Security must be enabled and valid Basic Auth is required.
+
 #### `GET /api/restart`
 
 Reboots the device.
@@ -193,6 +233,37 @@ GET /index.html.gz
 ```
 
 ### Common POST APIs
+
+#### `POST /api/admin/enable`
+
+Enables or disables Admin Security and optionally configures the Modbus/TCP and SSDP
+switches. Initial enablement does not require existing credentials. Once enabled, valid
+Basic Auth is required.
+
+#### `POST /api/admin/password`
+
+Changes the administrator username and password. The request requires valid Basic Auth,
+the current credentials in the JSON body, and matching `password` and `confirmPassword`
+values for the new password.
+
+#### `POST /api/admin/recovery`
+
+Publicly accepts the current recovery payload and its 128-character Ed25519 signature.
+Successful verification clears the administrator credentials and disables Admin Security.
+
+#### `POST /api/tls/ca/upload`
+
+Uploads a raw PEM Root CA using `Content-Type: application/x-pem-file`. Maximum size is
+3072 bytes. Uploading does not automatically select Custom CA mode.
+
+#### `POST /api/tls/ca/select`
+
+Selects `builtin`, `custom`, or `none` outbound TLS verification mode.
+
+#### `POST /api/tls/ca/delete`
+
+Deletes the Custom Root CA and restores `builtin` mode. All TLS CA endpoints require
+Admin Security and valid Basic Auth.
 
 #### `POST /api/setbrand`
 
